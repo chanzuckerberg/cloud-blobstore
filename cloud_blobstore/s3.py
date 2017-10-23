@@ -197,6 +197,28 @@ class S3BlobStore(BlobStore):
             ),
         )
 
+    def get_size(
+            self,
+            bucket: str,
+            object_name: str
+    ) -> int:
+        """
+        Retrieves the filesize
+        :param bucket: the bucket the object resides in.
+        :param object_name: the name of the object for which metadata is being
+        retrieved.
+        :return: integer equal to filesize in bytes
+        """
+        try:
+            response = self.get_all_metadata(bucket, object_name)
+            size = response['ContentLength']
+            return size
+        except botocore.exceptions.ClientError as ex:
+            if str(ex.response['Error']['Code']) == \
+                    str(requests.codes.not_found):
+                raise BlobNotFoundError(ex)
+            raise BlobStoreUnknownError(ex)
+
     def find_next_missing_parts(
             self,
             bucket: str,
