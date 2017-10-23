@@ -95,7 +95,7 @@ class BlobStore:
         """
         Retrieves the filesize
         :param bucket: the bucket the object resides in.
-        :param object_name: the name of the object for which metadata is being
+        :param object_name: the name of the object for which size is being
         retrieved.
         :return: integer equal to filesize in bytes
         """
