@@ -205,8 +205,7 @@ class S3BlobStore(BlobStore):
         """
         Retrieves the filesize
         :param bucket: the bucket the object resides in.
-        :param object_name: the name of the object for which size is being
-        retrieved.
+        :param object_name: the name of the object for which size is being retrieved.
         :return: integer equal to filesize in bytes
         """
         try:
@@ -214,8 +213,7 @@ class S3BlobStore(BlobStore):
             size = response['ContentLength']
             return size
         except botocore.exceptions.ClientError as ex:
-            if str(ex.response['Error']['Code']) == \
-                    str(requests.codes.not_found):
+            if str(ex.response['Error']['Code']) == str(requests.codes.not_found):
                 raise BlobNotFoundError(ex)
             raise BlobStoreUnknownError(ex)
 
