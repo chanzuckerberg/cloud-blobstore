@@ -105,10 +105,7 @@ class BlobStoreTests:
             )
 
     def testGetSize(self):
-        sz = self.handle.get_size(
-            self.test_fixtures_bucket,
-            "test_good_source_data/0",
-        )
+        sz = self.handle.get_size(self.test_fixtures_bucket, "test_good_source_data/0")
         self.assertEqual(sz, 11358)
 
     def testCopy(self):
