@@ -20,10 +20,31 @@ class BlobStoreTests:
         metadata = handle.get_user_metadata(
             self.test_fixtures_bucket,
             "test_good_source_data/0")
-        self.assertIn('hca-dss-content-type', metadata)
+        self.assertIn('test_metadata', metadata)
+        self.assertEqual(metadata['test_metadata'], "12345")
 
         with self.assertRaises(BlobNotFoundError):
             handle.get_user_metadata(
+                self.test_fixtures_bucket,
+                "test_good_source_data_DOES_NOT_EXIST")
+
+    def test_get_content_type(self):
+        """
+        Ensure that the ``get_content_type`` methods return sane data.
+        """
+        handle = self.handle  # type: BlobStore
+        content_type = handle.get_content_type(
+            self.test_fixtures_bucket,
+            "test_good_source_data/0")
+        self.assertEqual(content_type, "text/plain")
+
+        content_type = handle.get_content_type(
+            self.test_fixtures_bucket,
+            "test_good_source_data/1")
+        self.assertEqual(content_type, "binary/octet-stream")
+
+        with self.assertRaises(BlobNotFoundError):
+            handle.get_content_type(
                 self.test_fixtures_bucket,
                 "test_good_source_data_DOES_NOT_EXIST")
 

@@ -37,6 +37,7 @@ class Uploader:
             self,
             local_path: str,
             remote_path: str,
+            content_type: str="binary/octet-stream",
             metadata_keys: typing.Dict[str, str]=None,
             *args,
             **kwargs) -> None:
@@ -58,6 +59,7 @@ class S3Uploader(Uploader):
             self,
             local_path: str,
             remote_path: str,
+            content_type: str="binary/octet-stream",
             metadata_keys: typing.Dict[str, str]=None,
             tags: typing.Dict[str, str]=None,
             *args,
@@ -81,8 +83,11 @@ class S3Uploader(Uploader):
             fp,
             self.bucket,
             remote_path,
-            ExtraArgs={"Metadata": metadata_keys},
-            Config=transfer_config
+            ExtraArgs={
+                "Metadata": metadata_keys,
+                "ContentType": content_type,
+            },
+            Config=transfer_config,
         )
 
         tagset = dict(TagSet=[])  # type: typing.Dict[str, typing.List[dict]]
@@ -112,12 +117,13 @@ class GSUploader(Uploader):
             self,
             local_path: str,
             remote_path: str,
+            content_type: str="binary/octet-stream",
             metadata_keys: typing.Dict[str, str]=None,
             *args,
             **kwargs) -> None:
         logger.info("%s", f"Uploading {local_path} to gs://{self.bucket.name}/{remote_path}")
         blob = self.bucket.blob(remote_path)
-        blob.upload_from_filename(os.path.join(self.local_root, local_path))
+        blob.upload_from_filename(os.path.join(self.local_root, local_path), content_type=content_type)
         if metadata_keys:
             blob.metadata = metadata_keys
             blob.patch()

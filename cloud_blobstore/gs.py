@@ -95,6 +95,24 @@ class GSBlobStore(BlobStore):
 
         return binascii.hexlify(base64.b64decode(blob_obj.crc32c)).decode("utf-8").lower()
 
+    def get_content_type(
+            self,
+            bucket: str,
+            object_name: str
+    ) -> str:
+        """
+        Retrieves the content-type for a given object in a given bucket.
+        :param bucket: the bucket the object resides in.
+        :param object_name: the name of the object for which content-type is being retrieved.
+        :return: the content-type
+        """
+        bucket_obj = self._ensure_bucket_loaded(bucket)
+        blob_obj = bucket_obj.get_blob(object_name)
+        if blob_obj is None:
+            raise BlobNotFoundError()
+
+        return blob_obj.content_type
+
     def get_user_metadata(
             self,
             bucket: str,

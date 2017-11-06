@@ -130,6 +130,21 @@ class S3BlobStore(BlobStore):
                 raise BlobNotFoundError(ex)
             raise BlobStoreUnknownError(ex)
 
+    def get_content_type(
+            self,
+            bucket: str,
+            object_name: str
+    ) -> str:
+        """
+        Retrieves the content-type for a given object in a given bucket.
+        :param bucket: the bucket the object resides in.
+        :param object_name: the name of the object for which content-type is being retrieved.
+        :return: the content-type
+        """
+        response = self.get_all_metadata(bucket, object_name)
+        # hilariously, the ETag is quoted.  Unclear why.
+        return response['ContentType']
+
     def get_cloud_checksum(
             self,
             bucket: str,

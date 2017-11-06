@@ -72,6 +72,19 @@ class BlobStore:
         """
         raise NotImplementedError()
 
+    def get_content_type(
+            self,
+            bucket: str,
+            object_name: str
+    ) -> str:
+        """
+        Retrieves the content-type for a given object in a given bucket.
+        :param bucket: the bucket the object resides in.
+        :param object_name: the name of the object for which content-type is being retrieved.
+        :return: the content-type
+        """
+        raise NotImplementedError()
+
     def get_user_metadata(
             self,
             bucket: str,
