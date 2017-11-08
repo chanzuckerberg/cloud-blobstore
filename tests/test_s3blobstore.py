@@ -12,7 +12,7 @@ sys.path.insert(0, pkg_root)  # noqa
 from cloud_blobstore import BlobNotFoundError
 from cloud_blobstore.s3 import S3BlobStore
 from tests import infra
-from tests.test_blobstore import BlobStoreTests
+from tests.blobstore_common_tests import BlobStoreTests
 
 
 class TestS3BlobStore(unittest.TestCase, BlobStoreTests):
