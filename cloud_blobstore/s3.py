@@ -86,7 +86,7 @@ class S3BlobStore(BlobStore):
     def delete(self, bucket: str, object_name: str):
         self.s3_client.delete_object(
             Bucket=bucket,
-            key=object_name
+            Key=object_name
         )
 
     def get(self, bucket: str, object_name: str) -> bytes:

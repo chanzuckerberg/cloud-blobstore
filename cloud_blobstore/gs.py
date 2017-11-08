@@ -62,6 +62,17 @@ class GSBlobStore(BlobStore):
         blob_obj = bucket_obj.blob(object_name, chunk_size=1 * 1024 * 1024)
         blob_obj.upload_from_file(src_file_handle)
 
+    def delete(self, bucket: str, object_name: str):
+        """
+        Deletes an object in a bucket.  If the operation definitely did not delete anything, return False.  Any other
+        return value is treated as something was possibly deleted.
+        """
+        bucket_obj = self._ensure_bucket_loaded(bucket)
+        blob_obj = bucket_obj.get_blob(object_name)
+        if blob_obj is None:
+            return False
+        blob_obj.delete()
+
     def get(self, bucket: str, object_name: str) -> bytes:
         """
         Retrieves the data for a given object in a given bucket.

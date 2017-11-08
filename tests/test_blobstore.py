@@ -142,3 +142,23 @@ class BlobStoreTests:
         # should be able to get metadata for the file.
         self.handle.get_user_metadata(
             self.test_bucket, dst_blob_name)
+
+    def testDelete(self):
+        fobj = io.BytesIO(b"abcabcabc")
+        dst_blob_name = infra.generate_test_key()
+
+        self.handle.upload_file_handle(
+            self.test_bucket,
+            dst_blob_name,
+            fobj
+        )
+
+        # should be able to get metadata for the file.
+        self.handle.get_user_metadata(
+            self.test_bucket, dst_blob_name)
+
+        self.handle.delete(self.test_bucket, dst_blob_name)
+
+        with self.assertRaises(BlobNotFoundError):
+            self.handle.get_user_metadata(
+                self.test_bucket, dst_blob_name)
