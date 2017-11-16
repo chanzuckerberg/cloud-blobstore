@@ -135,5 +135,20 @@ class TestS3BlobStore(unittest.TestCase, BlobStoreTests):
             else:
                 self.assertIn(ix, res)
 
+    def test_check_bucket_exists(self):
+        """
+        Ensure that the ``check_bucket_exists`` method returns true for FIXTURE AND TEST buckets.
+        """
+        handle = self.handle  # type: BlobStore
+        self.assertEqual(handle.check_bucket_exists(self.test_fixtures_bucket), True)
+        self.assertEqual(handle.check_bucket_exists(self.test_bucket), True)
+
+    def test_get_bucket_region(self):
+        """
+        Ensure that the ``get_bucket_region`` method returns true for FIXTURE and TEST buckets.
+        """
+        handle = self.handle  # type: BlobStore
+        self.assertEqual(handle.check_bucket_exists(self.test_fixtures_bucket), 'us-east-1')
+
 if __name__ == '__main__':
     unittest.main()
