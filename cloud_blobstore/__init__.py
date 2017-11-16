@@ -120,6 +120,22 @@ class BlobStore:
             **kwargs):
         raise NotImplementedError()
 
+    def check_bucket_exists(self, bucket: str) -> bool:
+        """
+        Checks if bucket with specified name exists.
+        :param bucket: the bucket to be checked.
+        :return: true if specified bucket exists in the AZ.
+        """
+        raise NotImplementedError()
+
+    def get_bucket_region(self, bucket) -> str:
+        """
+        Get region associated with a specified bucket name.
+        :param bucket: the bucket to be checked.
+        :return: region, Note that underying AWS API returns None for default US-East-1,
+        I'm replacing that with us-east-1.
+        """
+        raise NotImplementedError()
 
 class BlobStoreError(Exception):
     pass
