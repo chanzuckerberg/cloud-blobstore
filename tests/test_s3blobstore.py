@@ -148,7 +148,8 @@ class TestS3BlobStore(unittest.TestCase, BlobStoreTests):
         Ensure that the ``get_bucket_region`` method returns true for FIXTURE and TEST buckets.
         """
         handle = self.handle  # type: BlobStore
-        self.assertEqual(handle.check_bucket_exists(self.test_fixtures_bucket), 'us-east-1')
+        self.assertEqual(handle.get_bucket_region(self.test_fixtures_bucket), 'us-east-1')
+        self.assertEqual(handle.get_bucket_region(self.test_bucket), 'us-east-1')
 
 if __name__ == '__main__':
     unittest.main()
