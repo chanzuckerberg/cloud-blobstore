@@ -283,7 +283,7 @@ class S3BlobStore(BlobStore):
         """
         Checks if bucket with specified name exists.
         :param bucket: the bucket to be checked.
-        :return: true if specified bucket exists in the AZ.
+        :return: true if specified bucket exists.
         """
         exists = True
         try:
@@ -300,7 +300,7 @@ class S3BlobStore(BlobStore):
         """
         Get region associated with a specified bucket name.
         :param bucket: the bucket to be checked.
-        :return: region, Note that underying AWS API returns None for default US-East-1,
+        :return: region, Note that underlying AWS API returns None for default US-East-1,
         I'm replacing that with us-east-1.
         """
         region = self.s3.meta.client.get_bucket_location(Bucket=bucket)["LocationConstraint"]

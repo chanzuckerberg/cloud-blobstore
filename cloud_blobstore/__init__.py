@@ -124,7 +124,7 @@ class BlobStore:
         """
         Checks if bucket with specified name exists.
         :param bucket: the bucket to be checked.
-        :return: true if specified bucket exists in the AZ.
+        :return: true if specified bucket exists.
         """
         raise NotImplementedError()
 
@@ -132,8 +132,7 @@ class BlobStore:
         """
         Get region associated with a specified bucket name.
         :param bucket: the bucket to be checked.
-        :return: region, Note that underying AWS API returns None for default US-East-1,
-        I'm replacing that with us-east-1.
+        :return: region in which specified bucket resides.
         """
         raise NotImplementedError()
 
