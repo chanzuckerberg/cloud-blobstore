@@ -7,12 +7,14 @@ This library provides an abstraction layer for the most basic functionality prov
 ### Set up your python environment
 Before you start, you may wish to set up a [virtualenv](https://virtualenv.pypa.io/en/stable/).  Run `pip install -r requirements-dev.txt`. Then set up the following environment variables:
 
-| Environment variable  | Explanation |
-| --------------------- | ----------- |
-| S3_BUCKET             | Points to the AWS S3 bucket where new files will be written.  It may be advisable to set up a cleanup policy for this bucket. |
-| S3_BUCKET_FIXTURES    | Points to the AWS S3 bucket where static fixtures are stored. |
-| GS_BUCKET             | Points to the GCP GS bucket where new files will be written.  It may be advisable to set up a cleanup policy for this bucket. |
-| GS_BUCKET_FIXTURES    | Points to the GCP GS bucket where static fixtures are stored. |
+| Environment variable    | Explanation |
+| ----------------------- | ----------- |
+| S3_BUCKET               | Points to the AWS S3 bucket where new files will be written.  It may be advisable to set up a cleanup policy for this bucket. |
+| S3_BUCKET_FIXTURES      | Points to the AWS S3 bucket where static fixtures are stored. |
+| S3_BUCKET_US_EAST_1     | Points to an AWS S3 bucket in the US_EAST_1 region.  This can overlap with one of the other buckets. |
+| S3_BUCKET_NON_US_EAST_1 | Points to an AWS S3 bucket _not_ in the US_EAST_1 region.  This can overlap with one of the other buckets. |
+| GS_BUCKET               | Points to the GCP GS bucket where new files will be written.  It may be advisable to set up a cleanup policy for this bucket. |
+| GS_BUCKET_FIXTURES      | Points to the GCP GS bucket where static fixtures are stored. |
 
 
 ### Set up test fixtures.

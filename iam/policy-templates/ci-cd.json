@@ -27,6 +27,8 @@
       "Resource": [
         "arn:aws:s3:::$S3_BUCKET",
         "arn:aws:s3:::$S3_BUCKET/*",
+        "arn:aws:s3:::$S3_BUCKET_US_EAST_1",
+        "arn:aws:s3:::$S3_BUCKET_NON_US_EAST_1",
         "arn:aws:s3:::$S3_BUCKET_FIXTURES",
         "arn:aws:s3:::$S3_BUCKET_FIXTURES/*"
       ]

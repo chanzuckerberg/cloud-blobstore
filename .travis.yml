@@ -17,6 +17,8 @@ after_success:
 env:
   global:
   - S3_BUCKET=cloud-blobstore-travis-test
+  - S3_BUCKET_US_EAST_1=cloud-blobstore-travis-test
+  - S3_BUCKET_NON_US_EAST_1=cloud-blobstore-travis-test-us-west-1
   - S3_BUCKET_FIXTURES=cloud-blobstore-travis-test-fixtures
   - GS_BUCKET=czi-cloud-blobstore
   - GS_BUCKET_FIXTURES=czi-cloud-blobstore-fixtures
