@@ -25,7 +25,6 @@ class S3BlobStore(BlobStore):
                 raise BlobStoreCredentialError()
 
         self.s3_client = boto3.client("s3")
-        self.s3 = boto3.resource('s3')
 
     def list(
             self,
@@ -287,7 +286,7 @@ class S3BlobStore(BlobStore):
         """
         exists = True
         try:
-            self.s3.meta.client.head_bucket(Bucket=bucket)
+            self.s3.head_bucket(Bucket=bucket)
         except botocore.exceptions.ClientError as e:
             # If a client error is thrown, then check that it was a 404 error.
             # If it was a 404 error, then the bucket does not exist.
@@ -303,5 +302,5 @@ class S3BlobStore(BlobStore):
         :return: region, Note that underlying AWS API returns None for default US-East-1,
         I'm replacing that with us-east-1.
         """
-        region = self.s3.meta.client.get_bucket_location(Bucket=bucket)["LocationConstraint"]
+        region = self.s3.get_bucket_location(Bucket=bucket)["LocationConstraint"]
         return 'us-east-1' if region is None else region
