@@ -19,6 +19,8 @@ class TestS3BlobStore(unittest.TestCase, BlobStoreTests):
     def setUp(self):
         self.test_bucket = infra.get_env("S3_BUCKET")
         self.test_fixtures_bucket = infra.get_env("S3_BUCKET_FIXTURES")
+        self.test_us_east_1_bucket = infra.get_env("S3_BUCKET_US_EAST_1")
+        self.test_non_us_east_1_bucket = infra.get_env("S3_BUCKET_NON_US_EAST_1")
 
         self.handle = S3BlobStore()
 
@@ -149,8 +151,8 @@ class TestS3BlobStore(unittest.TestCase, BlobStoreTests):
         Ensure that the ``get_bucket_region`` method returns true for FIXTURE and TEST buckets.
         """
         handle = self.handle  # type: BlobStore
-        self.assertEqual(handle.get_bucket_region(self.test_fixtures_bucket), 'us-east-1')
-        self.assertEqual(handle.get_bucket_region(self.test_bucket), 'us-east-1')
+        self.assertEqual(handle.get_bucket_region(self.test_us_east_1_bucket), 'us-east-1')
+        self.assertNotEqual(handle.get_bucket_region(self.test_non_us_east_1_bucket), 'us-east-1')
 
 if __name__ == '__main__':
     unittest.main()
