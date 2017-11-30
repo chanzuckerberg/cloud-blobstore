@@ -10,7 +10,64 @@ from . import (
     BlobStore,
     BlobStoreCredentialError,
     BlobStoreUnknownError,
+    PagedIter
 )
+
+
+class AWSPagedIter(PagedIter):
+    def __init__(
+            self,
+            bucket: str,
+            prefix: str=None,
+            delimiter: str=None,
+            marker: str=None,
+            token: str=None,
+            k_page_max: int=None
+    ) -> typing.Iterator[str]:
+        self.marker = marker
+        self.token = token
+        self.k_page_max = None
+
+        self.kwargs = {
+            'Bucket': bucket,
+        }
+
+        if prefix is not None:
+            self.kwargs['Prefix'] = prefix
+
+        if delimiter is not None:
+            self.kwargs['Delimiter'] = delimiter
+
+        if k_page_max is not None:
+            self.kwargs['MaxKeys'] = k_page_max
+
+    def get_api_response(self, next_token):
+        kwargs = self.kwargs.copy()
+
+        if next_token is not None:
+            kwargs['ContinuationToken'] = next_token
+    
+        resp = boto3.client('s3').list_objects_v2(
+            ** kwargs
+        )
+
+        return resp
+
+    def get_listing_from_response(self, resp):
+        if resp.get('Contents', None):
+            contents = resp['Contents']
+        else:
+            contents = list()
+
+        return [b['Key'] for b in contents]
+
+    def get_next_token_from_response(self, resp):
+        if resp['IsTruncated']:
+            token = resp['NextContinuationToken'] 
+        else:
+            token = None
+
+        return token
 
 
 class S3BlobStore(BlobStore):
@@ -46,6 +103,24 @@ class S3BlobStore(BlobStore):
                 objects.
                 filter(**kwargs)):
             yield item.key
+
+    def list_v2(
+            self,
+            bucket: str,
+            prefix: str=None,
+            delimiter: str=None,
+            marker: str=None,
+            token: str=None,
+            k_page_max: int=None
+    ) -> typing.Iterator[str]:
+        return AWSPagedIter(
+            bucket,
+            prefix,
+            delimiter,
+            marker,
+            token,
+            k_page_max
+        )        
 
     def generate_presigned_GET_url(
             self,

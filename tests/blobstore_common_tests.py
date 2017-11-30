@@ -2,7 +2,7 @@ import io
 
 import requests
 
-from cloud_blobstore import BlobNotFoundError, BlobStore
+from cloud_blobstore import BlobNotFoundError, BlobStore, BlobPagingError
 from tests import infra
 
 
@@ -88,6 +88,97 @@ class BlobStoreTests:
                      delimiter="/"
                  )]
         self.assertEqual(len(items), 1)
+
+    def testListV2(self):
+        """
+        Ensure that the ```list``` method returns sane data.
+        """
+        items = [item for item in
+                 self.handle.list_v2(
+                     self.test_fixtures_bucket,
+                     "test_good_source_data/0",
+                 )]
+        self.assertTrue(len(items) > 0)
+        for item in items:
+            if item == "test_good_source_data/0":
+                break
+        else:
+            self.fail("did not find the requisite key")
+
+        # fetch a bunch of items all at once.
+        items = [item for item in
+                 self.handle.list_v2(
+                     self.test_fixtures_bucket,
+                     "testList/prefix",
+                 )]
+        self.assertEqual(len(items), 10)
+
+        # fetch a bunch of items all at once with small page size
+        items = [item for item in
+                 self.handle.list_v2(
+                     self.test_fixtures_bucket,
+                     "testList/prefix",
+                    k_page_max=3
+                 )]
+        self.assertEqual(len(items), 10)
+
+        # this should fetch both testList/delimiter and testList/delimiter/test
+        items = [item for item in
+                 self.handle.list_v2(
+                     self.test_fixtures_bucket,
+                     "testList/delimiter",
+                 )]
+        self.assertEqual(len(items), 2)
+
+        # this should fetch only testList/delimiter
+        items = [item for item in
+                 self.handle.list_v2(
+                     self.test_fixtures_bucket,
+                     "testList/delimiter",
+                     delimiter="/"
+                 )]
+        self.assertEqual(len(items), 1)
+
+    def testListV2Continuation(self):
+        self._testListV2Continuation(2, 3)
+        self._testListV2Continuation(2, 4)
+
+    def _testListV2Continuation(self, page_size, break_size):
+        blobiter = self.handle.list_v2(
+            self.test_fixtures_bucket,
+            "testList/prefix",
+            k_page_max=page_size,
+        ) 
+
+        items1 = list()
+        items2 = list()
+
+        for i, item in enumerate(blobiter):
+            items1.append(
+                item
+            )
+            if i >= break_size - 1:
+                break
+
+        blobiter = self.handle.list_v2(
+            self.test_fixtures_bucket,
+            "testList/prefix",
+            token = blobiter.token,
+            marker = items1[-1],
+            k_page_max=page_size,
+        )
+
+        items2 = [item for item in blobiter]
+
+        self.assertEqual(len(items1) + len(items2), 10)
+
+        # starting from an unfound marker should raise an error
+        with self.assertRaises(BlobPagingError):
+            [item for item in
+                self.handle.list_v2(
+                     self.test_fixtures_bucket,
+                     marker="nonsensicalnonsene"
+                 )]
 
     def testGetPresignedUrl(self):
         presigned_url = self.handle.generate_presigned_GET_url(

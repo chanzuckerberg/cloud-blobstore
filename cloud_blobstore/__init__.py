@@ -1,6 +1,74 @@
 import typing
 
 
+class PagedIter:
+    """
+    Provide an iterator that will iterate over every object, filtered by
+    prefix and delimiter. Alternately continue iteration with token and
+    key (marker).
+    """
+
+    def __init__(
+            self,
+            prefix: str=None,
+            delimiter: str=None,
+            marker: str=None,
+            token: str=None,
+            k_page_max: int=None
+    ):
+        self.kwargs = dict()
+        self.token = None
+        self.marker = None
+
+    def get_api_response(self, next_token):
+        """
+        Make blobstore-specific list api request.
+        """
+        raise NotImplementedError()
+
+    def get_listing_from_response(self, resp):
+        """
+        Retrieve blob key listing from blobstore response.
+        """
+        raise NotImplementedError()
+
+    def get_next_token_from_response(self, resp):
+        """
+        Retrieve opaque continuation token from blobstore response.
+        """
+        raise NotImplementedError()
+
+    def __iter__(self):
+        """
+        Iterate over the blobs, saving page tokens and blob key markers as
+        needed in order to continue listing where one left off.
+        """
+        next_token = self.token
+
+        while True:
+            self.token = next_token
+            resp = self.get_api_response(next_token)
+            listing = self.get_listing_from_response(resp)
+            next_token = self.get_next_token_from_response(resp)
+
+            i = 0
+            if self.marker:
+                try:
+                    i = 1 + next(i for (i, key) in enumerate(listing) if key == self.marker)
+                    listing = listing[i:]
+                except StopIteration:
+                    raise BlobPagingError('Marker not found in this page')
+
+            for key in listing:
+                self.marker = key
+                yield self.marker
+            else:
+                self.marker = None
+
+            if not next_token:
+                break
+
+
 class BlobStore:
     """Abstract base class for all blob stores."""
     def __init__(self):
@@ -17,6 +85,22 @@ class BlobStore:
         contain the delimiter past the prefix.
         """
         raise NotImplementedError()
+
+    def list_v2(
+            self,
+            bucket: str,
+            prefix: str=None,
+            delimiter: str=None,
+            marker: str=None,
+            token: str=None,
+            k_page_max: int=None
+    ) -> typing.Iterator[str]:
+        """
+        Returns an iterator of all blob entries in a bucket that match a given prefix.  Do not return any keys that
+        contain the delimiter past the prefix.
+        """
+        raise NotImplementedError()
+            
 
     def generate_presigned_GET_url(
             self,
@@ -157,4 +241,7 @@ class BlobNotFoundError(BlobStoreError):
 
 
 class BlobAlreadyExistsError(BlobStoreError):
+    pass
+
+class BlobPagingError(BlobStoreError):
     pass

@@ -6,7 +6,53 @@ import typing
 from google.cloud.storage import Client
 from google.cloud.storage.bucket import Bucket
 
-from . import BlobNotFoundError, BlobStore
+from . import BlobNotFoundError, BlobStore, PagedIter
+
+
+class GSPagedIter(PagedIter):
+    def __init__(
+            self,
+            bucket_obj, # type: Bucket
+            prefix: str=None,
+            delimiter: str=None,
+            marker: str=None,
+            token: str=None,
+            k_page_max: int=None
+    ) -> typing.Iterator[str]:
+        self.bucket_obj = bucket_obj
+        self.marker = marker
+        self.token = token
+
+        self.kwargs = dict()
+
+        if prefix is not None:
+            self.kwargs['prefix'] = prefix
+
+        if delimiter is not None:
+            self.kwargs['delimiter'] = delimiter
+
+        if k_page_max is not None:
+            self.kwargs['max_results'] = k_page_max
+
+    def get_api_response(self, next_token=None):
+        kwargs = self.kwargs.copy()
+
+        if next_token is not None:
+            kwargs['page_token'] = next_token
+    
+        resp = self.bucket_obj.list_blobs(
+            ** kwargs
+        )
+
+        return resp
+
+    def get_listing_from_response(self, resp):
+        contents = list(resp)
+
+        return [b.name for b in contents]
+
+    def get_next_token_from_response(self, resp):
+        return resp.next_page_token
 
 
 class GSBlobStore(BlobStore):
@@ -43,6 +89,24 @@ class GSBlobStore(BlobStore):
         bucket_obj = self._ensure_bucket_loaded(bucket)
         for blob_obj in bucket_obj.list_blobs(**kwargs):
             yield blob_obj.name
+
+    def list_v2(
+            self,
+            bucket: str,
+            prefix: str=None,
+            delimiter: str=None,
+            marker: str=None,
+            token: str=None,
+            k_page_max: int=None
+    ) -> typing.Iterator[str]:
+        return GSPagedIter(
+            self._ensure_bucket_loaded(bucket),
+            prefix,
+            delimiter,
+            marker,
+            token,
+            k_page_max
+        )
 
     def generate_presigned_GET_url(
             self,
