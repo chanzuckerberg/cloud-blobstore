@@ -52,12 +52,11 @@ class BlobStoreTests:
         """
         Ensure that the ```list``` method returns sane data.
         """
-        items = [item for item in
-                 self.handle.list(
-                     self.test_fixtures_bucket,
-                     "test_good_source_data/0",
-                 )]
-        self.assertTrue(len(items) > 0)
+        items = list(self.handle.list(
+            self.test_fixtures_bucket,
+            "test_good_source_data/0",
+        ))
+        self.assertIn("test_good_source_data/0", items)
         for item in items:
             if item == "test_good_source_data/0":
                 break
@@ -65,40 +64,36 @@ class BlobStoreTests:
             self.fail("did not find the requisite key")
 
         # fetch a bunch of items all at once.
-        items = [item for item in
-                 self.handle.list(
-                     self.test_fixtures_bucket,
-                     "testList/prefix",
-                 )]
+        items = list(self.handle.list(
+            self.test_fixtures_bucket,
+            "testList/prefix",
+        ))
         self.assertEqual(len(items), 10)
 
         # this should fetch both testList/delimiter and testList/delimiter/test
-        items = [item for item in
-                 self.handle.list(
-                     self.test_fixtures_bucket,
-                     "testList/delimiter",
-                 )]
+        items = list(self.handle.list(
+            self.test_fixtures_bucket,
+            "testList/delimiter",
+        ))
         self.assertEqual(len(items), 2)
 
         # this should fetch only testList/delimiter
-        items = [item for item in
-                 self.handle.list(
-                     self.test_fixtures_bucket,
-                     "testList/delimiter",
-                     delimiter="/"
-                 )]
+        items = list(self.handle.list(
+            self.test_fixtures_bucket,
+            "testList/delimiter",
+            delimiter="/"
+        ))
         self.assertEqual(len(items), 1)
 
     def testListV2(self):
         """
-        Ensure that the ```list``` method returns sane data.
+        Ensure that the ```list_v2``` method returns sane data.
         """
-        items = [item for item in
-                 self.handle.list_v2(
-                     self.test_fixtures_bucket,
-                     "test_good_source_data/0",
-                 )]
-        self.assertTrue(len(items) > 0)
+        items = list(self.handle.list_v2(
+            self.test_fixtures_bucket,
+            "test_good_source_data/0",
+        ))
+        self.assertIn("test_good_source_data/0", items)
         for item in items:
             if item == "test_good_source_data/0":
                 break
@@ -106,37 +101,33 @@ class BlobStoreTests:
             self.fail("did not find the requisite key")
 
         # fetch a bunch of items all at once.
-        items = [item for item in
-                 self.handle.list_v2(
-                     self.test_fixtures_bucket,
-                     "testList/prefix",
-                 )]
+        items = list(self.handle.list_v2(
+            self.test_fixtures_bucket,
+            "testList/prefix",
+        ))
         self.assertEqual(len(items), 10)
 
         # fetch a bunch of items all at once with small page size
-        items = [item for item in
-                 self.handle.list_v2(
-                     self.test_fixtures_bucket,
-                     "testList/prefix",
-                    k_page_max=3
-                 )]
+        items = list(self.handle.list_v2(
+            self.test_fixtures_bucket,
+            "testList/prefix",
+            k_page_max=3
+        ))
         self.assertEqual(len(items), 10)
 
         # this should fetch both testList/delimiter and testList/delimiter/test
-        items = [item for item in
-                 self.handle.list_v2(
-                     self.test_fixtures_bucket,
-                     "testList/delimiter",
-                 )]
+        items = list(self.handle.list_v2(
+            self.test_fixtures_bucket,
+            "testList/delimiter",
+        ))
         self.assertEqual(len(items), 2)
 
         # this should fetch only testList/delimiter
-        items = [item for item in
-                 self.handle.list_v2(
-                     self.test_fixtures_bucket,
-                     "testList/delimiter",
-                     delimiter="/"
-                 )]
+        items = list(self.handle.list_v2(
+            self.test_fixtures_bucket,
+            "testList/delimiter",
+            delimiter="/"
+        ))
         self.assertEqual(len(items), 1)
 
     def testListV2Continuation(self):
@@ -148,7 +139,7 @@ class BlobStoreTests:
             self.test_fixtures_bucket,
             "testList/prefix",
             k_page_max=page_size,
-        ) 
+        )
 
         items1 = list()
         items2 = list()
@@ -163,8 +154,8 @@ class BlobStoreTests:
         blobiter = self.handle.list_v2(
             self.test_fixtures_bucket,
             "testList/prefix",
-            token = blobiter.token,
-            marker = items1[-1],
+            token=blobiter.token,
+            marker=items1[-1],
             k_page_max=page_size,
         )
 
@@ -176,9 +167,9 @@ class BlobStoreTests:
         with self.assertRaises(BlobPagingError):
             [item for item in
                 self.handle.list_v2(
-                     self.test_fixtures_bucket,
-                     marker="nonsensicalnonsene"
-                 )]
+                    self.test_fixtures_bucket,
+                    marker="nonsensicalnonsene"
+                )]
 
     def testGetPresignedUrl(self):
         presigned_url = self.handle.generate_presigned_GET_url(

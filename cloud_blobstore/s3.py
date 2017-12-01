@@ -14,23 +14,23 @@ from . import (
 )
 
 
-class AWSPagedIter(PagedIter):
+class S3PagedIter(PagedIter):
     def __init__(
             self,
             bucket: str,
+            *,
             prefix: str=None,
             delimiter: str=None,
             marker: str=None,
             token: str=None,
             k_page_max: int=None
-    ) -> typing.Iterator[str]:
+    ) -> None:
         self.marker = marker
         self.token = token
-        self.k_page_max = None
 
-        self.kwargs = {
-            'Bucket': bucket,
-        }
+        self.kwargs = dict()  # type: dict
+
+        self.kwargs['Bucket'] = bucket
 
         if prefix is not None:
             self.kwargs['Prefix'] = prefix
@@ -46,10 +46,8 @@ class AWSPagedIter(PagedIter):
 
         if next_token is not None:
             kwargs['ContinuationToken'] = next_token
-    
-        resp = boto3.client('s3').list_objects_v2(
-            ** kwargs
-        )
+
+        resp = boto3.client('s3').list_objects_v2(**kwargs)
 
         return resp
 
@@ -59,11 +57,11 @@ class AWSPagedIter(PagedIter):
         else:
             contents = list()
 
-        return [b['Key'] for b in contents]
+        return (b['Key'] for b in contents)
 
     def get_next_token_from_response(self, resp):
         if resp['IsTruncated']:
-            token = resp['NextContinuationToken'] 
+            token = resp['NextContinuationToken']
         else:
             token = None
 
@@ -112,15 +110,15 @@ class S3BlobStore(BlobStore):
             marker: str=None,
             token: str=None,
             k_page_max: int=None
-    ) -> typing.Iterator[str]:
-        return AWSPagedIter(
+    ):  # type typing.Iterable[str]:
+        return S3PagedIter(
             bucket,
-            prefix,
-            delimiter,
-            marker,
-            token,
-            k_page_max
-        )        
+            prefix=prefix,
+            delimiter=delimiter,
+            marker=marker,
+            token=token,
+            k_page_max=k_page_max
+        )
 
     def generate_presigned_GET_url(
             self,

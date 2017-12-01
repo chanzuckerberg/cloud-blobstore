@@ -12,18 +12,19 @@ from . import BlobNotFoundError, BlobStore, PagedIter
 class GSPagedIter(PagedIter):
     def __init__(
             self,
-            bucket_obj, # type: Bucket
+            bucket_obj,  # type: Bucket
+            *,
             prefix: str=None,
             delimiter: str=None,
             marker: str=None,
             token: str=None,
             k_page_max: int=None
-    ) -> typing.Iterator[str]:
+    ) -> None:
         self.bucket_obj = bucket_obj
         self.marker = marker
         self.token = token
 
-        self.kwargs = dict()
+        self.kwargs = dict()  # type: dict
 
         if prefix is not None:
             self.kwargs['prefix'] = prefix
@@ -39,17 +40,15 @@ class GSPagedIter(PagedIter):
 
         if next_token is not None:
             kwargs['page_token'] = next_token
-    
-        resp = self.bucket_obj.list_blobs(
-            ** kwargs
-        )
+
+        resp = self.bucket_obj.list_blobs(**kwargs)
 
         return resp
 
     def get_listing_from_response(self, resp):
         contents = list(resp)
 
-        return [b.name for b in contents]
+        return (b.name for b in contents)
 
     def get_next_token_from_response(self, resp):
         return resp.next_page_token
@@ -98,14 +97,14 @@ class GSBlobStore(BlobStore):
             marker: str=None,
             token: str=None,
             k_page_max: int=None
-    ) -> typing.Iterator[str]:
+    ):  # type typing.Iterable[str]:
         return GSPagedIter(
             self._ensure_bucket_loaded(bucket),
-            prefix,
-            delimiter,
-            marker,
-            token,
-            k_page_max
+            prefix=prefix,
+            delimiter=delimiter,
+            marker=marker,
+            token=token,
+            k_page_max=k_page_max
         )
 
     def generate_presigned_GET_url(

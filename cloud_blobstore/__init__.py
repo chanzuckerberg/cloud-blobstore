@@ -1,24 +1,13 @@
 import typing
 
 
-class PagedIter:
+class PagedIter(typing.Iterable[str]):
     """
-    Provide an iterator that will iterate over every object, filtered by
-    prefix and delimiter. Alternately continue iteration with token and
-    key (marker).
+    Provide an iterator that will iterate over every object, filtered by prefix and delimiter. Alternately continue
+    iteration with token and key (marker).
     """
-
-    def __init__(
-            self,
-            prefix: str=None,
-            delimiter: str=None,
-            marker: str=None,
-            token: str=None,
-            k_page_max: int=None
-    ):
-        self.kwargs = dict()
-        self.token = None
-        self.marker = None
+    def __init__(self):
+        pass
 
     def get_api_response(self, next_token):
         """
@@ -26,13 +15,13 @@ class PagedIter:
         """
         raise NotImplementedError()
 
-    def get_listing_from_response(self, resp):
+    def get_listing_from_response(self, resp) -> typing.Iterable[str]:
         """
         Retrieve blob key listing from blobstore response.
         """
         raise NotImplementedError()
 
-    def get_next_token_from_response(self, resp):
+    def get_next_token_from_response(self, resp) -> str:
         """
         Retrieve opaque continuation token from blobstore response.
         """
@@ -47,16 +36,15 @@ class PagedIter:
 
         while True:
             self.token = next_token
+
             resp = self.get_api_response(next_token)
             listing = self.get_listing_from_response(resp)
-            next_token = self.get_next_token_from_response(resp)
 
-            i = 0
             if self.marker:
-                try:
-                    i = 1 + next(i for (i, key) in enumerate(listing) if key == self.marker)
-                    listing = listing[i:]
-                except StopIteration:
+                for key in listing:
+                    if key == self.marker:
+                        break
+                else:
                     raise BlobPagingError('Marker not found in this page')
 
             for key in listing:
@@ -64,6 +52,8 @@ class PagedIter:
                 yield self.marker
             else:
                 self.marker = None
+
+            next_token = self.get_next_token_from_response(resp)
 
             if not next_token:
                 break
@@ -100,7 +90,6 @@ class BlobStore:
         contain the delimiter past the prefix.
         """
         raise NotImplementedError()
-            
 
     def generate_presigned_GET_url(
             self,
