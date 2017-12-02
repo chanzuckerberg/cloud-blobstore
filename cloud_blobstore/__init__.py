@@ -6,8 +6,6 @@ class PagedIter(typing.Iterable[str]):
     Provide an iterator that will iterate over every object, filtered by prefix and delimiter. Alternately continue
     iteration with token and key (marker).
     """
-    def __init__(self):
-        pass
 
     def get_api_response(self, next_token):
         """
@@ -50,8 +48,8 @@ class PagedIter(typing.Iterable[str]):
             for key in listing:
                 self.marker = key
                 yield self.marker
-            else:
-                self.marker = None
+
+            self.marker = None
 
             next_token = self.get_next_token_from_response(resp)
 
