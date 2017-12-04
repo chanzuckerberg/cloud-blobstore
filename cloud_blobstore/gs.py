@@ -46,9 +46,7 @@ class GSPagedIter(PagedIter):
         return resp
 
     def get_listing_from_response(self, resp):
-        contents = list(resp)
-
-        return (b.name for b in contents)
+        return (b.name for b in resp)
 
     def get_next_token_from_response(self, resp):
         return resp.next_page_token
