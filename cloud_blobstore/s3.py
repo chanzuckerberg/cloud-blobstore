@@ -21,11 +21,11 @@ class S3PagedIter(PagedIter):
             *,
             prefix: str=None,
             delimiter: str=None,
-            marker: str=None,
+            start_after_key: str=None,
             token: str=None,
             k_page_max: int=None
     ) -> None:
-        self.marker = marker
+        self.start_after_key = start_after_key
         self.token = token
 
         self.kwargs = dict()  # type: dict
@@ -107,7 +107,7 @@ class S3BlobStore(BlobStore):
             bucket: str,
             prefix: str=None,
             delimiter: str=None,
-            marker: str=None,
+            start_after_key: str=None,
             token: str=None,
             k_page_max: int=None
     ):  # type typing.Iterable[str]:
@@ -115,7 +115,7 @@ class S3BlobStore(BlobStore):
             bucket,
             prefix=prefix,
             delimiter=delimiter,
-            marker=marker,
+            start_after_key=start_after_key,
             token=token,
             k_page_max=k_page_max
         )

@@ -4,7 +4,7 @@ import typing
 class PagedIter(typing.Iterable[str]):
     """
     Provide an iterator that will iterate over every object, filtered by prefix and delimiter. Alternately continue
-    iteration with token and key (marker).
+    iteration with token and key (start_after_key).
     """
 
     def get_api_response(self, next_token):
@@ -27,8 +27,11 @@ class PagedIter(typing.Iterable[str]):
 
     def __iter__(self):
         """
-        Iterate over the blobs, saving page tokens and blob key markers as
-        needed in order to continue listing where one left off.
+        Iterate over the blobs, saving page tokens and blob key start_after_keys as needed in order to continue
+        listing where one left off.
+
+        If start_after_key is not None, iteration will begin on the next key if start_after_key is found on the
+        first page of results. If it is not found on the first page of results, BlobPagingError will be raised.
         """
         next_token = self.token
 
@@ -38,18 +41,18 @@ class PagedIter(typing.Iterable[str]):
             resp = self.get_api_response(next_token)
             listing = self.get_listing_from_response(resp)
 
-            if self.marker:
+            if self.start_after_key:
                 for key in listing:
-                    if key == self.marker:
+                    if key == self.start_after_key:
                         break
                 else:
                     raise BlobPagingError('Marker not found in this page')
 
             for key in listing:
-                self.marker = key
-                yield self.marker
+                self.start_after_key = key
+                yield self.start_after_key
 
-            self.marker = None
+            self.start_after_key = None
 
             next_token = self.get_next_token_from_response(resp)
 
@@ -79,7 +82,7 @@ class BlobStore:
             bucket: str,
             prefix: str=None,
             delimiter: str=None,
-            marker: str=None,
+            start_after_key: str=None,
             token: str=None,
             k_page_max: int=None
     ) -> typing.Iterator[str]:

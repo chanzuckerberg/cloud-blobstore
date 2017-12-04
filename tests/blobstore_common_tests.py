@@ -155,7 +155,7 @@ class BlobStoreTests:
             self.test_fixtures_bucket,
             "testList/prefix",
             token=blobiter.token,
-            marker=items1[-1],
+            start_after_key=items1[-1],
             k_page_max=page_size,
         )
 
@@ -163,12 +163,12 @@ class BlobStoreTests:
 
         self.assertEqual(len(items1) + len(items2), 10)
 
-        # starting from an unfound marker should raise an error
+        # starting from an unfound start_after_key should raise an error
         with self.assertRaises(BlobPagingError):
             [item for item in
                 self.handle.list_v2(
                     self.test_fixtures_bucket,
-                    marker="nonsensicalnonsene"
+                    start_after_key="nonsensicalnonsene"
                 )]
 
     def testGetPresignedUrl(self):

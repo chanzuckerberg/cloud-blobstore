@@ -16,12 +16,12 @@ class GSPagedIter(PagedIter):
             *,
             prefix: str=None,
             delimiter: str=None,
-            marker: str=None,
+            start_after_key: str=None,
             token: str=None,
             k_page_max: int=None
     ) -> None:
         self.bucket_obj = bucket_obj
-        self.marker = marker
+        self.start_after_key = start_after_key
         self.token = token
 
         self.kwargs = dict()  # type: dict
@@ -94,7 +94,7 @@ class GSBlobStore(BlobStore):
             bucket: str,
             prefix: str=None,
             delimiter: str=None,
-            marker: str=None,
+            start_after_key: str=None,
             token: str=None,
             k_page_max: int=None
     ):  # type typing.Iterable[str]:
@@ -102,7 +102,7 @@ class GSBlobStore(BlobStore):
             self._ensure_bucket_loaded(bucket),
             prefix=prefix,
             delimiter=delimiter,
-            marker=marker,
+            start_after_key=start_after_key,
             token=token,
             k_page_max=k_page_max
         )
