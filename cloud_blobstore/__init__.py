@@ -1,4 +1,5 @@
 import typing
+import types
 
 
 class PagedIter(typing.Iterable[str]):
@@ -42,15 +43,21 @@ class PagedIter(typing.Iterable[str]):
             listing = self.get_listing_from_response(resp)
 
             if self.start_after_key:
-                for key in listing:
+                while True:
+                    try:
+                        key = next(listing)
+                    except StopIteration:
+                        raise BlobPagingError('Marker not found in this page')
+
                     if key == self.start_after_key:
                         break
-                else:
-                    raise BlobPagingError('Marker not found in this page')
 
-            for key in listing:
-                self.start_after_key = key
-                yield self.start_after_key
+            while True:
+                try:
+                    self.start_after_key = next(listing)
+                    yield self.start_after_key
+                except StopIteration:
+                    break
 
             self.start_after_key = None
 
