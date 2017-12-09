@@ -95,7 +95,7 @@ class GSBlobStore(BlobStore):
             start_after_key: str=None,
             token: str=None,
             k_page_max: int=None
-    ):  # type typing.Iterable[str]:
+    ) -> typing.Iterable[str]:
         return GSPagedIter(
             self._ensure_bucket_loaded(bucket),
             prefix=prefix,

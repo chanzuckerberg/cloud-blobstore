@@ -92,7 +92,7 @@ class BlobStore:
             start_after_key: str=None,
             token: str=None,
             k_page_max: int=None
-    ) -> typing.Iterator[str]:
+    ) -> typing.Iterable[str]:
         """
         Returns an iterator of all blob entries in a bucket that match a given prefix.  Do not return any keys that
         contain the delimiter past the prefix.

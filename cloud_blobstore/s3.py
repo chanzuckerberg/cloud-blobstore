@@ -10,7 +10,7 @@ from . import (
     BlobStore,
     BlobStoreCredentialError,
     BlobStoreUnknownError,
-    PagedIter
+    PagedIter,
 )
 
 
@@ -110,7 +110,7 @@ class S3BlobStore(BlobStore):
             start_after_key: str=None,
             token: str=None,
             k_page_max: int=None
-    ):  # type typing.Iterable[str]:
+    ) -> typing.Iterable[str]:
         return S3PagedIter(
             bucket,
             prefix=prefix,
