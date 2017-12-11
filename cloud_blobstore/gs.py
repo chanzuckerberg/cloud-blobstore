@@ -12,7 +12,7 @@ from . import BlobNotFoundError, BlobStore, PagedIter
 class GSPagedIter(PagedIter):
     def __init__(
             self,
-            bucket_obj,  # type: Bucket
+            bucket_obj: Bucket,
             *,
             prefix: str=None,
             delimiter: str=None,
