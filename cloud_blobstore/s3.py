@@ -123,23 +123,23 @@ class S3BlobStore(BlobStore):
     def generate_presigned_GET_url(
             self,
             bucket: str,
-            object_name: str,
+            key: str,
             **kwargs) -> str:
         return self._generate_presigned_url(
             bucket,
-            object_name,
+            key,
             "get_object"
         )
 
     def _generate_presigned_url(
             self,
             bucket: str,
-            object_name: str,
+            key: str,
             method: str,
             **kwargs) -> str:
         args = kwargs.copy()
         args['Bucket'] = bucket
-        args['Key'] = object_name
+        args['Key'] = key
         return self.s3_client.generate_presigned_url(
             ClientMethod=method,
             Params=args,
@@ -148,32 +148,32 @@ class S3BlobStore(BlobStore):
     def upload_file_handle(
             self,
             bucket: str,
-            object_name: str,
+            key: str,
             src_file_handle: typing.BinaryIO):
         self.s3_client.upload_fileobj(
             src_file_handle,
             Bucket=bucket,
-            Key=object_name,
+            Key=key,
         )
 
-    def delete(self, bucket: str, object_name: str):
+    def delete(self, bucket: str, key: str):
         self.s3_client.delete_object(
             Bucket=bucket,
-            Key=object_name
+            Key=key
         )
 
-    def get(self, bucket: str, object_name: str) -> bytes:
+    def get(self, bucket: str, key: str) -> bytes:
         """
         Retrieves the data for a given object in a given bucket.
         :param bucket: the bucket the object resides in.
-        :param object_name: the name of the object for which metadata is being
+        :param key: the key of the object for which metadata is being
         retrieved.
         :return: the data
         """
         try:
             response = self.s3_client.get_object(
                 Bucket=bucket,
-                Key=object_name
+                Key=key
             )
             return response['Body'].read()
         except botocore.exceptions.ClientError as ex:
@@ -184,18 +184,18 @@ class S3BlobStore(BlobStore):
     def get_all_metadata(
             self,
             bucket: str,
-            object_name: str
+            key: str
     ) -> dict:
         """
         Retrieves all the metadata for a given object in a given bucket.
         :param bucket: the bucket the object resides in.
-        :param object_name: the name of the object for which metadata is being retrieved.
+        :param key: the key of the object for which metadata is being retrieved.
         :return: the metadata
         """
         try:
             return self.s3_client.head_object(
                 Bucket=bucket,
-                Key=object_name
+                Key=key
             )
         except botocore.exceptions.ClientError as ex:
             if str(ex.response['Error']['Code']) == \
@@ -206,53 +206,53 @@ class S3BlobStore(BlobStore):
     def get_content_type(
             self,
             bucket: str,
-            object_name: str
+            key: str
     ) -> str:
         """
         Retrieves the content-type for a given object in a given bucket.
         :param bucket: the bucket the object resides in.
-        :param object_name: the name of the object for which content-type is being retrieved.
+        :param key: the key of the object for which content-type is being retrieved.
         :return: the content-type
         """
-        response = self.get_all_metadata(bucket, object_name)
+        response = self.get_all_metadata(bucket, key)
         # hilariously, the ETag is quoted.  Unclear why.
         return response['ContentType']
 
     def get_cloud_checksum(
             self,
             bucket: str,
-            object_name: str
+            key: str
     ) -> str:
         """
         Retrieves the cloud-provided checksum for a given object in a given bucket.
         :param bucket: the bucket the object resides in.
-        :param object_name: the name of the object for which checksum is being retrieved.
+        :param key: the key of the object for which checksum is being retrieved.
         :return: the cloud-provided checksum
         """
-        response = self.get_all_metadata(bucket, object_name)
+        response = self.get_all_metadata(bucket, key)
         # hilariously, the ETag is quoted.  Unclear why.
         return response['ETag'].strip("\"")
 
     def get_user_metadata(
             self,
             bucket: str,
-            object_name: str
+            key: str
     ) -> typing.Dict[str, str]:
         """
         Retrieves the user metadata for a given object in a given bucket.  If the platform has any mandatory prefixes or
         suffixes for the metadata keys, they should be stripped before being returned.
         :param bucket: the bucket the object resides in.
-        :param object_name: the name of the object for which metadata is being
+        :param key: the key of the object for which metadata is being
         retrieved.
         :return: a dictionary mapping metadata keys to metadata values.
         """
         try:
-            response = self.get_all_metadata(bucket, object_name)
+            response = self.get_all_metadata(bucket, key)
             metadata = response['Metadata'].copy()
 
             response = self.s3_client.get_object_tagging(
                 Bucket=bucket,
-                Key=object_name,
+                Key=key,
             )
             for tag in response['TagSet']:
                 key, value = tag['Key'], tag['Value']
@@ -267,17 +267,17 @@ class S3BlobStore(BlobStore):
 
     def copy(
             self,
-            src_bucket: str, src_object_name: str,
-            dst_bucket: str, dst_object_name: str,
+            src_bucket: str, src_key: str,
+            dst_bucket: str, dst_key: str,
             **kwargs
     ):
         self.s3_client.copy(
             dict(
                 Bucket=src_bucket,
-                Key=src_object_name,
+                Key=src_key,
             ),
             Bucket=dst_bucket,
-            Key=dst_object_name,
+            Key=dst_key,
             ExtraArgs=kwargs,
             Config=TransferConfig(
                 multipart_threshold=64 * 1024 * 1024,
@@ -288,16 +288,16 @@ class S3BlobStore(BlobStore):
     def get_size(
             self,
             bucket: str,
-            object_name: str
+            key: str
     ) -> int:
         """
         Retrieves the filesize
         :param bucket: the bucket the object resides in.
-        :param object_name: the name of the object for which size is being retrieved.
+        :param key: the key of the object for which size is being retrieved.
         :return: integer equal to filesize in bytes
         """
         try:
-            response = self.get_all_metadata(bucket, object_name)
+            response = self.get_all_metadata(bucket, key)
             size = response['ContentLength']
             return size
         except botocore.exceptions.ClientError as ex:

@@ -108,42 +108,42 @@ class GSBlobStore(BlobStore):
     def generate_presigned_GET_url(
             self,
             bucket: str,
-            object_name: str,
+            key: str,
             **kwargs) -> str:
         bucket_obj = self._ensure_bucket_loaded(bucket)
-        blob_obj = bucket_obj.get_blob(object_name)
+        blob_obj = bucket_obj.get_blob(key)
         return blob_obj.generate_signed_url(datetime.timedelta(days=1))
 
     def upload_file_handle(
             self,
             bucket: str,
-            object_name: str,
+            key: str,
             src_file_handle: typing.BinaryIO):
         bucket_obj = self._ensure_bucket_loaded(bucket)
-        blob_obj = bucket_obj.blob(object_name, chunk_size=1 * 1024 * 1024)
+        blob_obj = bucket_obj.blob(key, chunk_size=1 * 1024 * 1024)
         blob_obj.upload_from_file(src_file_handle)
 
-    def delete(self, bucket: str, object_name: str):
+    def delete(self, bucket: str, key: str):
         """
         Deletes an object in a bucket.  If the operation definitely did not delete anything, return False.  Any other
         return value is treated as something was possibly deleted.
         """
         bucket_obj = self._ensure_bucket_loaded(bucket)
-        blob_obj = bucket_obj.get_blob(object_name)
+        blob_obj = bucket_obj.get_blob(key)
         if blob_obj is None:
             return False
         blob_obj.delete()
 
-    def get(self, bucket: str, object_name: str) -> bytes:
+    def get(self, bucket: str, key: str) -> bytes:
         """
         Retrieves the data for a given object in a given bucket.
         :param bucket: the bucket the object resides in.
-        :param object_name: the name of the object for which metadata is being
+        :param key: the key of the object for which metadata is being
         retrieved.
         :return: the data
         """
         bucket_obj = self._ensure_bucket_loaded(bucket)
-        blob_obj = bucket_obj.get_blob(object_name)
+        blob_obj = bucket_obj.get_blob(key)
         if blob_obj is None:
             raise BlobNotFoundError()
 
@@ -152,16 +152,16 @@ class GSBlobStore(BlobStore):
     def get_cloud_checksum(
             self,
             bucket: str,
-            object_name: str
+            key: str
     ) -> str:
         """
         Retrieves the cloud-provided checksum for a given object in a given bucket.
         :param bucket: the bucket the object resides in.
-        :param object_name: the name of the object for which checksum is being retrieved.
+        :param key: the key of the object for which checksum is being retrieved.
         :return: the cloud-provided checksum
         """
         bucket_obj = self._ensure_bucket_loaded(bucket)
-        blob_obj = bucket_obj.get_blob(object_name)
+        blob_obj = bucket_obj.get_blob(key)
         if blob_obj is None:
             raise BlobNotFoundError()
 
@@ -170,16 +170,16 @@ class GSBlobStore(BlobStore):
     def get_content_type(
             self,
             bucket: str,
-            object_name: str
+            key: str
     ) -> str:
         """
         Retrieves the content-type for a given object in a given bucket.
         :param bucket: the bucket the object resides in.
-        :param object_name: the name of the object for which content-type is being retrieved.
+        :param key: the key of the object for which content-type is being retrieved.
         :return: the content-type
         """
         bucket_obj = self._ensure_bucket_loaded(bucket)
-        blob_obj = bucket_obj.get_blob(object_name)
+        blob_obj = bucket_obj.get_blob(key)
         if blob_obj is None:
             raise BlobNotFoundError()
 
@@ -188,18 +188,18 @@ class GSBlobStore(BlobStore):
     def get_user_metadata(
             self,
             bucket: str,
-            object_name: str
+            key: str
     ) -> typing.Dict[str, str]:
         """
         Retrieves the user metadata for a given object in a given bucket.  If the platform has any mandatory prefixes or
         suffixes for the metadata keys, they should be stripped before being returned.
         :param bucket: the bucket the object resides in.
-        :param object_name: the name of the object for which metadata is being
+        :param key: the key of the object for which metadata is being
         retrieved.
         :return: a dictionary mapping metadata keys to metadata values.
         """
         bucket_obj = self._ensure_bucket_loaded(bucket)
-        response = bucket_obj.get_blob(object_name)
+        response = bucket_obj.get_blob(key)
         if response is None:
             raise BlobNotFoundError()
         return response.metadata
@@ -207,16 +207,16 @@ class GSBlobStore(BlobStore):
     def get_size(
             self,
             bucket: str,
-            object_name: str
+            key: str
     ) -> int:
         """
         Retrieves the filesize
         :param bucket: the bucket the object resides in.
-        :param object_name: the name of the object for which size is being retrieved.
+        :param key: the key of the object for which size is being retrieved.
         :return: integer equal to filesize in bytes
         """
         bucket_obj = self._ensure_bucket_loaded(bucket)
-        response = bucket_obj.get_blob(object_name)
+        response = bucket_obj.get_blob(key)
         if response is None:
             raise BlobNotFoundError()
         res = response.size
@@ -224,11 +224,11 @@ class GSBlobStore(BlobStore):
 
     def copy(
             self,
-            src_bucket: str, src_object_name: str,
-            dst_bucket: str, dst_object_name: str,
+            src_bucket: str, src_key: str,
+            dst_bucket: str, dst_key: str,
             **kwargs
     ):
         src_bucket_obj = self._ensure_bucket_loaded(src_bucket)
-        src_blob_obj = src_bucket_obj.get_blob(src_object_name)
+        src_blob_obj = src_bucket_obj.get_blob(src_key)
         dst_bucket_obj = self._ensure_bucket_loaded(dst_bucket)
-        src_bucket_obj.copy_blob(src_blob_obj, dst_bucket_obj, new_name=dst_object_name)
+        src_bucket_obj.copy_blob(src_blob_obj, dst_bucket_obj, new_name=dst_key)
