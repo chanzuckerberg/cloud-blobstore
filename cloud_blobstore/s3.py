@@ -150,12 +150,17 @@ class S3BlobStore(BlobStore):
             bucket: str,
             key: str,
             src_file_handle: typing.BinaryIO,
-            **kwargs):
+            content_type: typing.Optional[str],
+            metadata: typing.Optional[dict]):
+        if content_type or metadata:
+            extra_args = {}
+            extra_args.update({'ContentType': content_type} if content_type else {})
+            extra_args.update({'Metadate': content_type} if content_type else {})
         self.s3_client.upload_fileobj(
             src_file_handle,
             Bucket=bucket,
             Key=key,
-            **kwarg
+            ExtraArgs=extra_args
         )
 
     def delete(self, bucket: str, key: str):

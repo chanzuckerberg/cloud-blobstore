@@ -119,10 +119,13 @@ class GSBlobStore(BlobStore):
             bucket: str,
             key: str,
             src_file_handle: typing.BinaryIO,
-            **kwargs):
+            content_type: typing.Optional[str],
+            metadata: typing.Optional[dict]):
         bucket_obj = self._ensure_bucket_loaded(bucket)
         blob_obj = bucket_obj.blob(key, chunk_size=1 * 1024 * 1024)
-        blob_obj.upload_from_file(src_file_handle)
+        blob_obj.upload_from_file(src_file_handle, content_type=content_type)
+        if metadata:
+            blob_obj.metadata(metadata)
 
     def delete(self, bucket: str, key: str):
         """
