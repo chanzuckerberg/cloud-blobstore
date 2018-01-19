@@ -149,11 +149,13 @@ class S3BlobStore(BlobStore):
             self,
             bucket: str,
             key: str,
-            src_file_handle: typing.BinaryIO):
+            src_file_handle: typing.BinaryIO,
+            **kwargs):
         self.s3_client.upload_fileobj(
             src_file_handle,
             Bucket=bucket,
             Key=key,
+            **kwarg
         )
 
     def delete(self, bucket: str, key: str):

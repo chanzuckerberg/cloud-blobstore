@@ -118,7 +118,8 @@ class GSBlobStore(BlobStore):
             self,
             bucket: str,
             key: str,
-            src_file_handle: typing.BinaryIO):
+            src_file_handle: typing.BinaryIO,
+            **kwargs):
         bucket_obj = self._ensure_bucket_loaded(bucket)
         blob_obj = bucket_obj.blob(key, chunk_size=1 * 1024 * 1024)
         blob_obj.upload_from_file(src_file_handle)

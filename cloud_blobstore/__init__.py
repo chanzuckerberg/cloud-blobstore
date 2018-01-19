@@ -117,7 +117,8 @@ class BlobStore:
             self,
             bucket: str,
             key: str,
-            src_file_handle: typing.BinaryIO):
+            src_file_handle: typing.BinaryIO,
+            **kwargs):
         """
         Saves the contents of a file handle as the contents of an object in a bucket.
         """
