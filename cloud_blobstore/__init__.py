@@ -118,8 +118,8 @@ class BlobStore:
             bucket: str,
             key: str,
             src_file_handle: typing.BinaryIO,
-            content_type: typing.Optional[str],
-            metadata: typing.Optional[dict]):
+            content_type: typing.Optional[str] = None,
+            metadata: typing.Optional[dict] = None):
         """
         Saves the contents of a file handle as the contents of an object in a bucket.
         """

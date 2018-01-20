@@ -150,8 +150,8 @@ class S3BlobStore(BlobStore):
             bucket: str,
             key: str,
             src_file_handle: typing.BinaryIO,
-            content_type: typing.Optional[str],
-            metadata: typing.Optional[dict]):
+            content_type: typing.Optional[str] = None,
+            metadata: typing.Optional[dict] = None):
         if content_type or metadata:
             extra_args = {}
             extra_args.update({'ContentType': content_type} if content_type else {})
