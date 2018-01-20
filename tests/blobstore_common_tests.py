@@ -184,15 +184,44 @@ class BlobStoreTests:
         fobj = io.BytesIO(b"abcabcabc")
         dst_blob_name = infra.generate_test_key()
 
-        self.handle.upload_file_handle(
-            self.test_bucket,
-            dst_blob_name,
-            fobj
-        )
+        with self.subTest("without optional parameters"):
+            self.handle.upload_file_handle(
+                self.test_bucket,
+                dst_blob_name,
+                fobj
+            )
 
-        # should be able to get metadata for the file.
-        self.handle.get_user_metadata(
-            self.test_bucket, dst_blob_name)
+            # should be able to get metadata for the file.
+            self.assertEqual(self.handle.get_user_metadata(self.test_bucket, dst_blob_name), None)
+            self.assertEqual(self.handle.get_content_type(self.test_bucket, dst_blob_name), None)
+
+        with self.subTest("with optional parameters"):
+            content_type = "data"
+            metadata = {"stuff": "things"}
+            self.handle.upload_file_handle(
+                self.test_bucket,
+                dst_blob_name,
+                fobj,
+                content_type=content_type,
+                metadata=metadata,
+            )
+
+            # should be able to get metadata for the file.
+            self.assertEqual(self.handle.get_user_metadata(self.test_bucket, dst_blob_name), metadata)
+            self.assertEqual(self.handle.get_content_type(self.test_bucket, dst_blob_name), content_type)
+
+        with self.subTest("with metadata as non dict"):
+            metadata = "things"
+            self.handle.upload_file_handle(
+                self.test_bucket,
+                dst_blob_name,
+                fobj,
+                content_type=content_type,
+                metadata=metadata,
+            )
+
+            # should be able to get metadata for the file.
+            self.assertEqual(self.handle.get_user_metadata(self.test_bucket, dst_blob_name), metadata)
 
     def testGet(self):
         data = self.handle.get(
