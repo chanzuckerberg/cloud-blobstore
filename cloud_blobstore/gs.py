@@ -119,8 +119,8 @@ class GSBlobStore(BlobStore):
             bucket: str,
             key: str,
             src_file_handle: typing.BinaryIO,
-            content_type: typing.Optional[str] = None,
-            metadata: typing.Optional[dict] = None):
+            content_type: str = None,
+            metadata: dict = None):
         bucket_obj = self._ensure_bucket_loaded(bucket)
         blob_obj = bucket_obj.blob(key, chunk_size=1 * 1024 * 1024)
         blob_obj.upload_from_file(src_file_handle, content_type=content_type)
