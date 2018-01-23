@@ -154,9 +154,9 @@ class S3BlobStore(BlobStore):
             metadata: dict=None):
         extra_args = {}
         if content_type is not None:
-            extra_args.update({'ContentType': content_type})
+            extra_args['ContentType'] = content_type
         if metadata is not None:
-            extra_args.update({'Metadate': metadata})
+            extra_args['Metadata'] = metadata
         self.s3_client.upload_fileobj(
             src_file_handle,
             Bucket=bucket,
