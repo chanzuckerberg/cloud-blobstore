@@ -150,12 +150,15 @@ class S3BlobStore(BlobStore):
             bucket: str,
             key: str,
             src_file_handle: typing.BinaryIO,
-            content_type: str = None,
-            metadata: dict = None):
+            content_type: str=None,
+            metadata: dict=None):
         extra_args = None
-        if content_type or metadata:
-            extra_args.update({'ContentType': content_type} if content_type else {})
-            extra_args.update({'Metadate': content_type} if content_type else {})
+        if content_type is not None or metadata is not None:
+            extra_args = {}
+            if content_type is not None:
+                extra_args.update({'ContentType': content_type})
+            if metadata is not None:
+                extra_args.update({'Metadate': metadata})
         self.s3_client.upload_fileobj(
             src_file_handle,
             Bucket=bucket,
