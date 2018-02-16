@@ -241,3 +241,12 @@ class GSBlobStore(BlobStore):
         src_blob_obj = src_bucket_obj.get_blob(src_key)
         dst_bucket_obj = self._ensure_bucket_loaded(dst_bucket)
         src_bucket_obj.copy_blob(src_blob_obj, dst_bucket_obj, new_name=dst_key)
+
+    def check_bucket_exists(self, bucket: str) -> bool:
+        """
+        Checks if bucket with specified name exists.
+        :param bucket: the bucket to be checked.
+        :return: true if specified bucket exists.
+        """
+        bucket_obj = self.gcp_client.bucket(bucket)  # type: Bucket
+        return bucket_obj.exists()
