@@ -262,3 +262,12 @@ class BlobStoreTests:
         with self.assertRaises(BlobNotFoundError):
             self.handle.get_user_metadata(
                 self.test_bucket, dst_blob_name)
+
+    def test_check_bucket_exists(self):
+        """
+        Ensure that the ``check_bucket_exists`` method returns true for FIXTURE AND TEST buckets.
+        """
+        handle = self.handle  # type: BlobStore
+        self.assertEqual(handle.check_bucket_exists(self.test_fixtures_bucket), True)
+        self.assertEqual(handle.check_bucket_exists(self.test_bucket), True)
+        self.assertEqual(handle.check_bucket_exists('e47114c9-bb96-480f-b6f5-c3e07aae399f'), False)

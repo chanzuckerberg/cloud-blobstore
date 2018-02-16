@@ -39,15 +39,5 @@ class TestGSBlobStore(unittest.TestCase, BlobStoreTests):
                 self.test_fixtures_bucket,
                 "test_good_source_data_DOES_NOT_EXIST")
 
-    def test_check_bucket_exists(self):
-        """
-        Ensure that the ``check_bucket_exists`` method returns true for FIXTURE AND TEST buckets.
-        """
-        handle = self.handle  # type: BlobStore
-        self.assertEqual(handle.check_bucket_exists(self.test_fixtures_bucket), True)
-        self.assertEqual(handle.check_bucket_exists(self.test_bucket), True)
-        self.assertEqual(handle.check_bucket_exists('e47114c9-bb96-480f-b6f5-c3e07aae399f'), False)
-
-
 if __name__ == '__main__':
     unittest.main()
