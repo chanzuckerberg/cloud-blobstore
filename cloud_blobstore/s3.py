@@ -231,6 +231,23 @@ class S3BlobStore(BlobStore):
         # hilariously, the ETag is quoted.  Unclear why.
         return response['ContentType']
 
+    def get_copy_token(
+            self,
+            bucket: str,
+            key: str,
+            cloud_checksum: str,
+    ) -> typing.Any:
+        """
+        Given a bucket, key, and the expected cloud-provided checksum, retrieve a token that can be passed into
+        :func:`~cloud_blobstore.BlobStore.copy` that guarantees the copy refers to the same version of the blob
+        identified by the checksum.
+        :param bucket: the bucket the object resides in.
+        :param key: the key of the object for which checksum is being retrieved.
+        :param cloud_checksum: the expected cloud-provided checksum.
+        :return: an opaque copy token
+        """
+        return cloud_checksum
+
     def get_cloud_checksum(
             self,
             bucket: str,
@@ -282,21 +299,28 @@ class S3BlobStore(BlobStore):
             self,
             src_bucket: str, src_key: str,
             dst_bucket: str, dst_key: str,
+            copy_token: typing.Any=None,
             **kwargs
     ):
-        self.s3_client.copy(
-            dict(
-                Bucket=src_bucket,
-                Key=src_key,
-            ),
-            Bucket=dst_bucket,
-            Key=dst_key,
-            ExtraArgs=kwargs,
-            Config=TransferConfig(
-                multipart_threshold=64 * 1024 * 1024,
-                multipart_chunksize=64 * 1024 * 1024,
-            ),
-        )
+        if copy_token is not None:
+            kwargs['CopySourceIfMatch'] = copy_token
+        try:
+            self.s3_client.copy(
+                dict(
+                    Bucket=src_bucket,
+                    Key=src_key,
+                ),
+                Bucket=dst_bucket,
+                Key=dst_key,
+                ExtraArgs=kwargs,
+                Config=TransferConfig(
+                    multipart_threshold=64 * 1024 * 1024,
+                    multipart_chunksize=64 * 1024 * 1024,
+                ),
+            )
+        except botocore.exceptions.ClientError as ex:
+            if str(ex.response['Error']['Code']) == str(requests.codes.precondition_failed):
+                raise BlobNotFoundError(ex)
 
     def get_size(
             self,

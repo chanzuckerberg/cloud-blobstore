@@ -3,6 +3,7 @@ import binascii
 import datetime
 import typing
 
+from google.cloud.exceptions import NotFound
 from google.cloud.storage import Client
 from google.cloud.storage.bucket import Bucket
 
@@ -194,6 +195,28 @@ class GSBlobStore(BlobStore):
 
         return blob_obj.content_type
 
+    def get_copy_token(
+            self,
+            bucket: str,
+            key: str,
+            cloud_checksum: str,
+    ) -> typing.Any:
+        """
+        Given a bucket, key, and the expected cloud-provided checksum, retrieve a token that can be passed into
+        :func:`~cloud_blobstore.BlobStore.copy` that guarantees the copy refers to the same version of the blob
+        identified by the checksum.
+        :param bucket: the bucket the object resides in.
+        :param key: the key of the object for which checksum is being retrieved.
+        :param cloud_checksum: the expected cloud-provided checksum.
+        :return: an opaque copy token
+        """
+        bucket_obj = self._ensure_bucket_loaded(bucket)
+        blob_obj = bucket_obj.get_blob(key)
+        if blob_obj is None:
+            raise BlobNotFoundError()
+        assert binascii.hexlify(base64.b64decode(blob_obj.crc32c)).decode("utf-8").lower() == cloud_checksum
+        return blob_obj.generation
+
     def get_user_metadata(
             self,
             bucket: str,
@@ -235,12 +258,16 @@ class GSBlobStore(BlobStore):
             self,
             src_bucket: str, src_key: str,
             dst_bucket: str, dst_key: str,
+            copy_token: typing.Any=None,
             **kwargs
     ):
         src_bucket_obj = self._ensure_bucket_loaded(src_bucket)
         src_blob_obj = src_bucket_obj.get_blob(src_key)
         dst_bucket_obj = self._ensure_bucket_loaded(dst_bucket)
-        src_bucket_obj.copy_blob(src_blob_obj, dst_bucket_obj, new_name=dst_key)
+        try:
+            src_bucket_obj.copy_blob(src_blob_obj, dst_bucket_obj, new_name=dst_key, source_generation=copy_token)
+        except NotFound as ex:
+            raise BlobNotFoundError(ex)
 
     def check_bucket_exists(self, bucket: str) -> bool:
         """

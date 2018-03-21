@@ -243,6 +243,64 @@ class BlobStoreTests:
         self.handle.get_user_metadata(
             self.test_bucket, dst_blob_name)
 
+    def testCopyTokenMatching(self):
+        cloud_checksum = self.handle.get_cloud_checksum(self.test_fixtures_bucket, "test_good_source_data/0")
+        copy_token = self.handle.get_copy_token(self.test_fixtures_bucket, "test_good_source_data/0", cloud_checksum)
+
+        dst_blob_name = infra.generate_test_key()
+
+        self.handle.copy(
+            self.test_fixtures_bucket,
+            "test_good_source_data/0",
+            self.test_bucket,
+            dst_blob_name,
+            copy_token,
+        )
+
+        # should be able to get metadata for the file.
+        self.handle.get_user_metadata(
+            self.test_bucket, dst_blob_name)
+
+    def testCopyTokenNotMatching(self):
+        intermediate_blob_name = infra.generate_test_key()
+
+        self.handle.copy(
+            self.test_fixtures_bucket,
+            "test_good_source_data/0",
+            self.test_bucket,
+            intermediate_blob_name,
+        )
+
+        cloud_checksum = self.handle.get_cloud_checksum(self.test_bucket, intermediate_blob_name)
+        copy_token = self.handle.get_copy_token(self.test_bucket, intermediate_blob_name, cloud_checksum)
+
+        self.handle.copy(
+            self.test_fixtures_bucket,
+            "test_good_source_data/1",
+            self.test_bucket,
+            intermediate_blob_name,
+        )
+
+        dst_blob_name = infra.generate_test_key()
+
+        try:
+            self.handle.copy(
+                self.test_bucket,
+                intermediate_blob_name,
+                self.test_bucket,
+                dst_blob_name,
+                copy_token,
+            )
+        except BlobNotFoundError:
+            return
+
+        # either the file should be copied from the _previous_ contents, or it should not be present.
+        try:
+            dst_cloud_checksum = self.handle.get_cloud_checksum(self.test_bucket, dst_blob_name)
+            self.assertEqual(dst_cloud_checksum, cloud_checksum)
+        except BlobNotFoundError:
+            pass
+
     def testDelete(self):
         fobj = io.BytesIO(b"abcabcabc")
         dst_blob_name = infra.generate_test_key()

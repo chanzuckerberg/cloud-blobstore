@@ -168,6 +168,23 @@ class BlobStore:
         """
         raise NotImplementedError()
 
+    def get_copy_token(
+            self,
+            bucket: str,
+            key: str,
+            cloud_checksum: str,
+    ) -> typing.Any:
+        """
+        Given a bucket, key, and the expected cloud-provided checksum, retrieve a token that can be passed into
+        :func:`~cloud_blobstore.BlobStore.copy` that guarantees the copy refers to the same version of the blob
+        identified by the checksum.
+        :param bucket: the bucket the object resides in.
+        :param key: the key of the object for which checksum is being retrieved.
+        :param cloud_checksum: the expected cloud-provided checksum.
+        :return: an opaque copy token
+        """
+        raise NotImplementedError()
+
     def get_user_metadata(
             self,
             bucket: str,
@@ -200,6 +217,7 @@ class BlobStore:
             self,
             src_bucket: str, src_key: str,
             dst_bucket: str, dst_key: str,
+            copy_token: typing.Any=None,
             **kwargs):
         raise NotImplementedError()
 
