@@ -150,6 +150,9 @@ class TestS3BlobStore(unittest.TestCase, BlobStoreTests):
         self.assertNotEqual(handle.get_bucket_region(self.test_non_us_east_1_bucket), 'us-east-1')
 
     def test_raises_read_error(self):
+        """
+        Ensure that we handle botocore ReadTimeouts
+        """
         def fake_connect():
             raise SocketTimeout('Bummer')
         with mock.patch(
