@@ -2,14 +2,18 @@
 # coding: utf-8
 
 import os
+import io
 import sys
 import unittest
 import uuid
 
+import mock
+from socket import error as SocketError, timeout as SocketTimeout
+
 pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noqa
 sys.path.insert(0, pkg_root)  # noqa
 
-from cloud_blobstore import BlobNotFoundError
+from cloud_blobstore import BlobNotFoundError, BlobStoreReadError
 from cloud_blobstore.s3 import S3BlobStore
 from tests import infra
 from tests.blobstore_common_tests import BlobStoreTests
@@ -144,6 +148,20 @@ class TestS3BlobStore(unittest.TestCase, BlobStoreTests):
         handle = self.handle  # type: BlobStore
         self.assertEqual(handle.get_bucket_region(self.test_us_east_1_bucket), 'us-east-1')
         self.assertNotEqual(handle.get_bucket_region(self.test_non_us_east_1_bucket), 'us-east-1')
+
+    def test_raises_read_error(self):
+        def fake_connect():
+            raise SocketTimeout('Bummer')
+        with mock.patch(
+            'botocore.vendored.requests.packages.urllib3.connection.HTTPSConnection.connect',
+            side_effect=fake_connect
+        ):
+            with self.assertRaises(BlobStoreReadError):
+                self.handle.upload_file_handle(
+                    self.test_bucket,
+                    'fake_key',
+                    io.BytesIO(b'asdfasfdasf'),
+                )
 
 if __name__ == '__main__':
     unittest.main()
