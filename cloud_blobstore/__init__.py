@@ -249,6 +249,10 @@ class BlobStoreCredentialError(BlobStoreError):
     pass
 
 
+class BlobStoreReadError(BlobStoreError):
+    pass
+
+
 class BlobBucketNotFoundError(BlobStoreError):
     pass
 
