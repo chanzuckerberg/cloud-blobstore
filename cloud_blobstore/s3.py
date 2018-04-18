@@ -4,11 +4,13 @@ import requests
 import typing
 
 from boto3.s3.transfer import TransferConfig
+from botocore.vendored.requests.exceptions import ConnectTimeout, ReadTimeout
 
 from . import (
     BlobNotFoundError,
     BlobStore,
     BlobStoreCredentialError,
+    BlobStoreTimeoutError,
     BlobStoreUnknownError,
     PagedIter,
 )
@@ -162,12 +164,15 @@ class S3BlobStore(BlobStore):
             extra_args['ContentType'] = content_type
         if metadata is not None:
             extra_args['Metadata'] = metadata
-        self.s3_client.upload_fileobj(
-            src_file_handle,
-            Bucket=bucket,
-            Key=key,
-            ExtraArgs=extra_args
-        )
+        try:
+            self.s3_client.upload_fileobj(
+                src_file_handle,
+                Bucket=bucket,
+                Key=key,
+                ExtraArgs=extra_args
+            )
+        except (ConnectTimeout, ReadTimeout) as ex:
+            raise BlobStoreTimeoutError(ex)
 
     def delete(self, bucket: str, key: str):
         self.s3_client.delete_object(
@@ -193,6 +198,8 @@ class S3BlobStore(BlobStore):
             if ex.response['Error']['Code'] == "NoSuchKey":
                 raise BlobNotFoundError(ex)
             raise BlobStoreUnknownError(ex)
+        except (ConnectTimeout, ReadTimeout) as ex:
+            raise BlobStoreTimeoutError(ex)
 
     def get_all_metadata(
             self,
@@ -215,6 +222,8 @@ class S3BlobStore(BlobStore):
                     str(requests.codes.not_found):
                 raise BlobNotFoundError(ex)
             raise BlobStoreUnknownError(ex)
+        except (ConnectTimeout, ReadTimeout) as ex:
+            raise BlobStoreTimeoutError(ex)
 
     def get_content_type(
             self,
@@ -294,6 +303,8 @@ class S3BlobStore(BlobStore):
                     str(requests.codes.not_found):
                 raise BlobNotFoundError(ex)
             raise BlobStoreUnknownError(ex)
+        except (ConnectTimeout, ReadTimeout) as ex:
+            raise BlobStoreTimeoutError(ex)
 
     def copy(
             self,
@@ -321,6 +332,8 @@ class S3BlobStore(BlobStore):
         except botocore.exceptions.ClientError as ex:
             if str(ex.response['Error']['Code']) == str(requests.codes.precondition_failed):
                 raise BlobNotFoundError(ex)
+        except (ConnectTimeout, ReadTimeout) as ex:
+            raise BlobStoreTimeoutError(ex)
 
     def get_size(
             self,
@@ -341,6 +354,8 @@ class S3BlobStore(BlobStore):
             if str(ex.response['Error']['Code']) == str(requests.codes.not_found):
                 raise BlobNotFoundError(ex)
             raise BlobStoreUnknownError(ex)
+        except (ConnectTimeout, ReadTimeout) as ex:
+            raise BlobStoreTimeoutError(ex)
 
     def find_next_missing_parts(
             self,
