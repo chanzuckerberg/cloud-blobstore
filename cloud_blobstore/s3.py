@@ -17,6 +17,15 @@ from . import (
 )
 
 
+def CatchTimeouts(meth):
+    def wrapped(*args, **kwargs):
+        try:
+            return meth(*args, **kwargs)
+        except (ConnectTimeout, ReadTimeout) as ex:
+            raise BlobStoreTimeoutError(ex)
+    return wrapped
+
+
 class S3PagedIter(PagedIter):
     def __init__(
             self,
@@ -423,11 +432,3 @@ class S3BlobStore(BlobStore):
         """
         region = self.s3_client.get_bucket_location(Bucket=bucket)["LocationConstraint"]
         return 'us-east-1' if region is None else region
-
-
-def CatchTimeouts(meth):
-    def wrapped(*args, **kwargs):
-        try:
-            meth(*args, **kwargs)
-        except (ConnectTimeout, ReadTimeout) as ex:
-            raise BlobStoreTimeoutError(ex)
