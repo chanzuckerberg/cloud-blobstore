@@ -14,6 +14,7 @@ import contextlib
 import socket
 from multiprocessing import Process, Manager
 from http.server import BaseHTTPRequestHandler, HTTPServer
+
 from botocore.vendored.requests.exceptions import ReadTimeout
 
 pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noqa
@@ -152,28 +153,28 @@ class TestS3BlobStore(unittest.TestCase, BlobStoreTests):
         Ensure that the ``get_bucket_region`` method returns true for FIXTURE and TEST buckets.
         """
         handle = self.handle  # type: BlobStore
-        self.assertEqual(handle.get_bucket_region(self.test_us_east_1_bucket), 'us-east-1')
-        self.assertNotEqual(handle.get_bucket_region(self.test_non_us_east_1_bucket), 'us-east-1')
+        self.assertEqual(handle.get_bucket_region(self.test_us_east_1_bucket), "us-east-1")
+        self.assertNotEqual(handle.get_bucket_region(self.test_non_us_east_1_bucket), "us-east-1")
 
     def test_read_timeout(self):
         read_timeout = 1
         with contextlib.closing(ProxyConnectServer.start(2 * read_timeout)):
             config = botocore.config.Config(
                 proxies={
-                    'http': f'{ProxyConnectServer.address}:{ProxyConnectServer.shared_info["port"]}',
-                    'https': f'{ProxyConnectServer.address}:{ProxyConnectServer.shared_info["port"]}',
+                    'http': f"{ProxyConnectServer.address}:{ProxyConnectServer.shared_info['port']}",
+                    'https': f"{ProxyConnectServer.address}:{ProxyConnectServer.shared_info['port']}",
                 },
                 read_timeout=read_timeout,
                 retries={'max_attempts': 0}
             )
-            s3_client = boto3.client('s3', config=config)
+            s3_client = boto3.client("s3", config=config)
             handle = S3BlobStore(s3_client)
 
             # Make sure we actually raise a ReadError
             with self.assertRaises(ReadTimeout):
                 s3_client.put_object(
                     Bucket=self.test_bucket,
-                    Key='fake_key',
+                    Key="fake_key",
                     Body=os.urandom(1000)
                 )
 
@@ -181,7 +182,7 @@ class TestS3BlobStore(unittest.TestCase, BlobStoreTests):
             with self.assertRaises(BlobStoreTimeoutError):
                 handle.upload_file_handle(
                     self.test_bucket,
-                    'fake_key',
+                    "fake_key",
                     io.BytesIO(os.urandom(1000))
                 )
 
@@ -190,24 +191,24 @@ class TestS3BlobStore(unittest.TestCase, BlobStoreTests):
         Ensure that we handle botocore ConnectTimeouts
         """
         s3_client = boto3.client(
-            's3',
+            "s3",
             config=botocore.config.Config(
-                retries={'max_attempts': 0}
+                retries={"max_attempts": 0}
             )
         )
 
         # Point boto to an unresponsive host
         s3_client._endpoint = botocore.endpoint.Endpoint(
-            'https://www.chanzuckerberg.com:3000',
-            '',
+            "https://www.chanzuckerberg.com:3000",
+            "",
             s3_client._endpoint._event_emitter
         )
-        handle = S3BlobStore(s3_client)
 
+        handle = S3BlobStore(s3_client)
         with self.assertRaises(BlobStoreTimeoutError):
             handle.upload_file_handle(
                 self.test_bucket,
-                'fake_key',
+                "fake_key",
                 io.BytesIO(os.urandom(1000))
             )
 
@@ -218,7 +219,7 @@ def unused_tcp_port():
         return sock.getsockname()[1]
 
 class ProxyConnectServer(HTTPServer):
-    address = '127.0.0.1'
+    address = "127.0.0.1"
     process = None
     manager = None
     shared_info = None
@@ -229,7 +230,7 @@ class ProxyConnectServer(HTTPServer):
 
     def server_activate(self, *args, **kwargs):
         super().server_activate(*args, **kwargs)
-        ProxyConnectServer.shared_info['is_active'] = True
+        ProxyConnectServer.shared_info["is_active"] = True
 
     @classmethod
     def start(cls, read_delay=0):
@@ -242,10 +243,10 @@ class ProxyConnectServer(HTTPServer):
 
         class LazyRequestHandler(BaseHTTPRequestHandler):
             def do_CONNECT(self):
-                address = self.path.split(':', 1)
+                address = self.path.split(":", 1)
                 address[1] = int(address[1]) or 443
                 s = socket.create_connection(address, timeout=self.timeout)
-                self.send_response(200, 'Connection Established')
+                self.send_response(200, "Connection Established")
                 self.end_headers()
 
                 conns = [self.connection, s]
@@ -284,5 +285,5 @@ class ProxyConnectServer(HTTPServer):
         cls.manager = None
         cls.shared_info = None
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

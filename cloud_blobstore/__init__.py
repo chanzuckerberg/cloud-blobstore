@@ -251,10 +251,9 @@ class BlobStoreCredentialError(BlobStoreError):
 
 class BlobStoreTimeoutError(BlobStoreError):
     """
-    BlobStoreTimeoutError wraps timeout erros from boto3, which arrise during difficulty when making
-    a connection (ConnectTimeout), or during slow reads (ReadTimeout). These may be controlled in
-    the `botocore.Config` arguments `read_timeout` and `connect_timeout`, and are influinced
-    by boto retry configurations.
+    BlobStoreTimeoutError wraps timeout errors from cloud providers.
+    For instance, boto3 provides `read_timeout` and `connect_timeout` configurations that may
+    lead to `ConnectTimeout` and `ReadTimeout` exceeptions.
     """
     pass
 
