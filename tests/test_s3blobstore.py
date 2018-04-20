@@ -193,7 +193,7 @@ class TestS3BlobStore(unittest.TestCase, BlobStoreTests):
         s3_client = boto3.client(
             "s3",
             config=botocore.config.Config(
-                retries={"max_attempts": 0}
+                retries={'max_attempts': 0}
             )
         )
 
@@ -230,7 +230,7 @@ class ProxyConnectServer(HTTPServer):
 
     def server_activate(self, *args, **kwargs):
         super().server_activate(*args, **kwargs)
-        ProxyConnectServer.shared_info["is_active"] = True
+        ProxyConnectServer.shared_info['is_active'] = True
 
     @classmethod
     def start(cls, read_delay=0):
