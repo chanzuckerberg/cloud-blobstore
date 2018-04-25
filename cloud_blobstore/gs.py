@@ -6,8 +6,18 @@ import typing
 from google.cloud.exceptions import NotFound
 from google.cloud.storage import Client
 from google.cloud.storage.bucket import Bucket
+from requests.exceptions import ConnectTimeout, ReadTimeout
 
-from . import BlobNotFoundError, BlobStore, PagedIter
+from . import BlobNotFoundError, BlobStore, PagedIter, BlobStoreTimeoutError
+
+
+def CatchTimeouts(meth):
+    def wrapped(*args, **kwargs):
+        try:
+            return meth(*args, **kwargs)
+        except (ConnectTimeout, ReadTimeout) as ex:
+            raise BlobStoreTimeoutError(ex)
+    return wrapped
 
 
 class GSPagedIter(PagedIter):
@@ -36,6 +46,7 @@ class GSPagedIter(PagedIter):
         if k_page_max is not None:
             self.kwargs['max_results'] = k_page_max
 
+    @CatchTimeouts
     def get_api_response(self, next_token=None):
         kwargs = self.kwargs.copy()
 
@@ -72,6 +83,7 @@ class GSBlobStore(BlobStore):
         self.bucket_map[bucket] = bucket_obj
         return bucket_obj
 
+    @CatchTimeouts
     def list(
             self,
             bucket: str,
@@ -110,6 +122,7 @@ class GSBlobStore(BlobStore):
             k_page_max=k_page_max
         )
 
+    @CatchTimeouts
     def generate_presigned_GET_url(
             self,
             bucket: str,
@@ -119,6 +132,7 @@ class GSBlobStore(BlobStore):
         blob_obj = bucket_obj.get_blob(key)
         return blob_obj.generate_signed_url(datetime.timedelta(days=1))
 
+    @CatchTimeouts
     def upload_file_handle(
             self,
             bucket: str,
@@ -133,6 +147,7 @@ class GSBlobStore(BlobStore):
             blob_obj.metadata = metadata
             blob_obj.patch()
 
+    @CatchTimeouts
     def delete(self, bucket: str, key: str):
         """
         Deletes an object in a bucket.  If the operation definitely did not delete anything, return False.  Any other
@@ -144,6 +159,7 @@ class GSBlobStore(BlobStore):
             return False
         blob_obj.delete()
 
+    @CatchTimeouts
     def get(self, bucket: str, key: str) -> bytes:
         """
         Retrieves the data for a given object in a given bucket.
@@ -159,6 +175,7 @@ class GSBlobStore(BlobStore):
 
         return blob_obj.download_as_string()
 
+    @CatchTimeouts
     def get_cloud_checksum(
             self,
             bucket: str,
@@ -177,6 +194,7 @@ class GSBlobStore(BlobStore):
 
         return binascii.hexlify(base64.b64decode(blob_obj.crc32c)).decode("utf-8").lower()
 
+    @CatchTimeouts
     def get_content_type(
             self,
             bucket: str,
@@ -195,6 +213,7 @@ class GSBlobStore(BlobStore):
 
         return blob_obj.content_type
 
+    @CatchTimeouts
     def get_copy_token(
             self,
             bucket: str,
@@ -217,6 +236,7 @@ class GSBlobStore(BlobStore):
         assert binascii.hexlify(base64.b64decode(blob_obj.crc32c)).decode("utf-8").lower() == cloud_checksum
         return blob_obj.generation
 
+    @CatchTimeouts
     def get_user_metadata(
             self,
             bucket: str,
@@ -236,6 +256,7 @@ class GSBlobStore(BlobStore):
             raise BlobNotFoundError()
         return response.metadata
 
+    @CatchTimeouts
     def get_size(
             self,
             bucket: str,
@@ -254,6 +275,7 @@ class GSBlobStore(BlobStore):
         res = response.size
         return res
 
+    @CatchTimeouts
     def copy(
             self,
             src_bucket: str, src_key: str,
@@ -269,6 +291,7 @@ class GSBlobStore(BlobStore):
         except NotFound as ex:
             raise BlobNotFoundError(ex)
 
+    @CatchTimeouts
     def check_bucket_exists(self, bucket: str) -> bool:
         """
         Checks if bucket with specified name exists.

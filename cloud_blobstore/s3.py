@@ -53,6 +53,7 @@ class S3PagedIter(PagedIter):
         if k_page_max is not None:
             self.kwargs['MaxKeys'] = k_page_max
 
+    @CatchTimeouts
     def get_api_response(self, next_token):
         kwargs = self.kwargs.copy()
 
@@ -339,7 +340,6 @@ class S3BlobStore(BlobStore):
             if str(ex.response['Error']['Code']) == str(requests.codes.precondition_failed):
                 raise BlobNotFoundError(ex)
 
-    @CatchTimeouts
     def get_size(
             self,
             bucket: str,
@@ -406,6 +406,7 @@ class S3BlobStore(BlobStore):
                     # finished examining the results of this batch, move onto the next one
                     break
 
+    @CatchTimeouts
     def check_bucket_exists(self, bucket: str) -> bool:
         """
         Checks if bucket with specified name exists.
@@ -423,6 +424,7 @@ class S3BlobStore(BlobStore):
                 exists = False
         return exists
 
+    @CatchTimeouts
     def get_bucket_region(self, bucket) -> str:
         """
         Get region associated with a specified bucket name.
