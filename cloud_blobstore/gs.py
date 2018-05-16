@@ -171,7 +171,7 @@ class GSBlobStore(BlobStore):
         bucket_obj = self._ensure_bucket_loaded(bucket)
         blob_obj = bucket_obj.get_blob(key)
         if blob_obj is None:
-            raise BlobNotFoundError(f"Could not find s3://{bucket}/{key}")
+            raise BlobNotFoundError(f"Could not find gs://{bucket}/{key}")
 
         return blob_obj.download_as_string()
 
@@ -190,7 +190,7 @@ class GSBlobStore(BlobStore):
         bucket_obj = self._ensure_bucket_loaded(bucket)
         blob_obj = bucket_obj.get_blob(key)
         if blob_obj is None:
-            raise BlobNotFoundError(f"Could not find s3://{bucket}/{key}")
+            raise BlobNotFoundError(f"Could not find gs://{bucket}/{key}")
 
         return binascii.hexlify(base64.b64decode(blob_obj.crc32c)).decode("utf-8").lower()
 
@@ -209,7 +209,7 @@ class GSBlobStore(BlobStore):
         bucket_obj = self._ensure_bucket_loaded(bucket)
         blob_obj = bucket_obj.get_blob(key)
         if blob_obj is None:
-            raise BlobNotFoundError(f"Could not find s3://{bucket}/{key}")
+            raise BlobNotFoundError(f"Could not find gs://{bucket}/{key}")
 
         return blob_obj.content_type
 
@@ -232,7 +232,7 @@ class GSBlobStore(BlobStore):
         bucket_obj = self._ensure_bucket_loaded(bucket)
         blob_obj = bucket_obj.get_blob(key)
         if blob_obj is None:
-            raise BlobNotFoundError(f"Could not find s3://{bucket}/{key}")
+            raise BlobNotFoundError(f"Could not find gs://{bucket}/{key}")
         assert binascii.hexlify(base64.b64decode(blob_obj.crc32c)).decode("utf-8").lower() == cloud_checksum
         return blob_obj.generation
 
@@ -253,7 +253,7 @@ class GSBlobStore(BlobStore):
         bucket_obj = self._ensure_bucket_loaded(bucket)
         response = bucket_obj.get_blob(key)
         if response is None:
-            raise BlobNotFoundError(f"Could not find s3://{bucket}/{key}")
+            raise BlobNotFoundError(f"Could not find gs://{bucket}/{key}")
         return response.metadata
 
     @CatchTimeouts
@@ -271,7 +271,7 @@ class GSBlobStore(BlobStore):
         bucket_obj = self._ensure_bucket_loaded(bucket)
         response = bucket_obj.get_blob(key)
         if response is None:
-            raise BlobNotFoundError(f"Could not find s3://{bucket}/{key}")
+            raise BlobNotFoundError(f"Could not find gs://{bucket}/{key}")
         res = response.size
         return res
 
@@ -289,7 +289,7 @@ class GSBlobStore(BlobStore):
         try:
             src_bucket_obj.copy_blob(src_blob_obj, dst_bucket_obj, new_name=dst_key, source_generation=copy_token)
         except NotFound as ex:
-            raise BlobNotFoundError(f"Could not find s3://{src_bucket}/{src_key}") from ex
+            raise BlobNotFoundError(f"Could not find gs://{src_bucket}/{src_key}") from ex
 
     @CatchTimeouts
     def check_bucket_exists(self, bucket: str) -> bool:
