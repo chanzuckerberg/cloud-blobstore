@@ -339,6 +339,7 @@ class S3BlobStore(BlobStore):
         except botocore.exceptions.ClientError as ex:
             if str(ex.response['Error']['Code']) == str(requests.codes.precondition_failed):
                 raise BlobNotFoundError(f"Could not find s3://{src_bucket}/{src_key}") from ex
+            raise BlobStoreUnknownError(ex)
 
     def get_size(
             self,
