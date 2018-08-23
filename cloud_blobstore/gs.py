@@ -83,6 +83,14 @@ class GSBlobStore(BlobStore):
         self.bucket_map[bucket] = bucket_obj
         return bucket_obj
 
+    def _get_blob_obj(self, bucket: str, key: str):
+        bucket_obj = self._ensure_bucket_loaded(bucket)
+        blob_obj = bucket_obj.get_blob(key)
+        if blob_obj is None:
+            raise BlobNotFoundError(f"Could not find gs://{bucket}/{key}")
+
+        return blob_obj
+
     @CatchTimeouts
     def list(
             self,
@@ -128,8 +136,7 @@ class GSBlobStore(BlobStore):
             bucket: str,
             key: str,
             **kwargs) -> str:
-        bucket_obj = self._ensure_bucket_loaded(bucket)
-        blob_obj = bucket_obj.get_blob(key)
+        blob_obj = self._get_blob_obj(bucket, key)
         return blob_obj.generate_signed_url(datetime.timedelta(days=1))
 
     @CatchTimeouts
@@ -153,9 +160,9 @@ class GSBlobStore(BlobStore):
         Deletes an object in a bucket.  If the operation definitely did not delete anything, return False.  Any other
         return value is treated as something was possibly deleted.
         """
-        bucket_obj = self._ensure_bucket_loaded(bucket)
-        blob_obj = bucket_obj.get_blob(key)
-        if blob_obj is None:
+        try:
+            blob_obj = self._get_blob_obj(bucket, key)
+        except BlobNotFoundError:
             return False
         blob_obj.delete()
 
@@ -188,11 +195,7 @@ class GSBlobStore(BlobStore):
         :param key: the key of the object for which checksum is being retrieved.
         :return: the cloud-provided checksum
         """
-        bucket_obj = self._ensure_bucket_loaded(bucket)
-        blob_obj = bucket_obj.get_blob(key)
-        if blob_obj is None:
-            raise BlobNotFoundError(f"Could not find gs://{bucket}/{key}")
-
+        blob_obj = self._get_blob_obj(bucket, key)
         return binascii.hexlify(base64.b64decode(blob_obj.crc32c)).decode("utf-8").lower()
 
     @CatchTimeouts
@@ -207,11 +210,7 @@ class GSBlobStore(BlobStore):
         :param key: the key of the object for which content-type is being retrieved.
         :return: the content-type
         """
-        bucket_obj = self._ensure_bucket_loaded(bucket)
-        blob_obj = bucket_obj.get_blob(key)
-        if blob_obj is None:
-            raise BlobNotFoundError(f"Could not find gs://{bucket}/{key}")
-
+        blob_obj = self._get_blob_obj(bucket, key)
         return blob_obj.content_type
 
     @CatchTimeouts
@@ -230,10 +229,7 @@ class GSBlobStore(BlobStore):
         :param cloud_checksum: the expected cloud-provided checksum.
         :return: an opaque copy token
         """
-        bucket_obj = self._ensure_bucket_loaded(bucket)
-        blob_obj = bucket_obj.get_blob(key)
-        if blob_obj is None:
-            raise BlobNotFoundError(f"Could not find gs://{bucket}/{key}")
+        blob_obj = self._get_blob_obj(bucket, key)
         assert binascii.hexlify(base64.b64decode(blob_obj.crc32c)).decode("utf-8").lower() == cloud_checksum
         return blob_obj.generation
 
@@ -251,11 +247,8 @@ class GSBlobStore(BlobStore):
         retrieved.
         :return: a dictionary mapping metadata keys to metadata values.
         """
-        bucket_obj = self._ensure_bucket_loaded(bucket)
-        response = bucket_obj.get_blob(key)
-        if response is None:
-            raise BlobNotFoundError(f"Could not find gs://{bucket}/{key}")
-        return response.metadata
+        blob_obj = self._get_blob_obj(bucket, key)
+        return blob_obj.metadata
 
     @CatchTimeouts
     def get_size(
@@ -269,12 +262,8 @@ class GSBlobStore(BlobStore):
         :param key: the key of the object for which size is being retrieved.
         :return: integer equal to filesize in bytes
         """
-        bucket_obj = self._ensure_bucket_loaded(bucket)
-        response = bucket_obj.get_blob(key)
-        if response is None:
-            raise BlobNotFoundError(f"Could not find gs://{bucket}/{key}")
-        res = response.size
-        return res
+        blob_obj = self._get_blob_obj(bucket, key)
+        return blob_obj.size
 
     @CatchTimeouts
     def copy(

@@ -67,6 +67,21 @@ class TestGSBlobStore(unittest.TestCase, BlobStoreTests):
                 io.BytesIO(os.urandom(1000))
             )
 
+    def test_get_blob_obj(self):
+        metadata = self.handle._get_blob_obj(self.test_fixtures_bucket,
+                                             "test_good_source_data/0")
+        self.assertTrue(hasattr(metadata, 'path'))
+        self.assertTrue(hasattr(metadata, 'crc32c'))
+        self.assertTrue(hasattr(metadata, 'content_type'))
+        self.assertTrue(hasattr(metadata, 'etag'))
+        self.assertTrue(hasattr(metadata, 'path'))
+        self.assertTrue(hasattr(metadata, 'size'))
+        self.assertTrue(hasattr(metadata, 'updated'))
+
+        with self.assertRaises(BlobNotFoundError):
+            self.handle._get_blob_obj(self.test_fixtures_bucket,
+                                      "test_good_source_data_DOES_NOT_EXIST")
+
     def _get_handle_with_timeouts(self, connect_timeout=60, read_timeout=60):
         class Session(google.auth.transport.requests.AuthorizedSession):
             def request(self, *args, **kwargs):
