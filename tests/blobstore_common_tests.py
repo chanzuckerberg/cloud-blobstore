@@ -1,5 +1,5 @@
+from datetime import date
 import io
-
 import requests
 
 from cloud_blobstore import BlobNotFoundError, BlobStore, BlobPagingError
@@ -45,6 +45,17 @@ class BlobStoreTests:
 
         with self.assertRaises(BlobNotFoundError):
             handle.get_content_type(
+                self.test_fixtures_bucket,
+                "test_good_source_data_DOES_NOT_EXIST")
+
+    def test_get_last_modified_date(self):
+        last_modified = self.handle.get_last_modified_date(
+            self.test_fixtures_bucket,
+            "test_good_source_data/0")
+        self.assertTrue(isinstance(last_modified, date))
+
+        with self.assertRaises(BlobNotFoundError):
+            self.handle.get_last_modified_date(
                 self.test_fixtures_bucket,
                 "test_good_source_data_DOES_NOT_EXIST")
 

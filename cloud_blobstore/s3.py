@@ -1,5 +1,6 @@
 import boto3
 import botocore
+from datetime import datetime
 import requests
 import typing
 
@@ -278,6 +279,21 @@ class S3BlobStore(BlobStore):
         response = self.get_all_metadata(bucket, key)
         # hilariously, the ETag is quoted.  Unclear why.
         return response['ETag'].strip("\"")
+
+    @CatchTimeouts
+    def get_last_modified_date(
+            self,
+            bucket: str,
+            key: str,
+    ) -> datetime:
+        """
+        Retrieves last modified date for a given key in a given bucket.
+        :param bucket: the bucket the object resides in.
+        :param key: the key of the object for which the last modified date is being retrieved.
+        :return: the last modified date
+        """
+        blob_obj = self.get_all_metadata(bucket, key)
+        return blob_obj['LastModified']
 
     @CatchTimeouts
     def get_user_metadata(

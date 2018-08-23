@@ -234,6 +234,21 @@ class GSBlobStore(BlobStore):
         return blob_obj.generation
 
     @CatchTimeouts
+    def get_last_modified_date(
+            self,
+            bucket: str,
+            key: str,
+    ) -> datetime.datetime:
+        """
+        Retrieves last modified date for a given key in a given bucket.
+        :param bucket: the bucket the object resides in.
+        :param key: the key of the object for which the last modified date is being retrieved.
+        :return: the last modified date
+        """
+        blob_obj = self._get_blob_obj(bucket, key)
+        return blob_obj.updated
+
+    @CatchTimeouts
     def get_user_metadata(
             self,
             bucket: str,

@@ -1,3 +1,4 @@
+from datetime import datetime
 import typing
 import types
 
@@ -182,6 +183,19 @@ class BlobStore:
         :param key: the key of the object for which checksum is being retrieved.
         :param cloud_checksum: the expected cloud-provided checksum.
         :return: an opaque copy token
+        """
+        raise NotImplementedError()
+
+    def get_last_modified_date(
+            self,
+            bucket: str,
+            key: str,
+    ) -> datetime:
+        """
+        Retrieves last modified date for a given key in a given bucket.
+        :param bucket: the bucket the object resides in.
+        :param key: the key of the object for which the last modified date is being retrieved.
+        :return: the last modified date
         """
         raise NotImplementedError()
 
