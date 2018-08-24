@@ -1,8 +1,8 @@
-from datetime import date
+from datetime import datetime
 import io
 import requests
 
-from cloud_blobstore import BlobNotFoundError, BlobStore, BlobPagingError
+from cloud_blobstore import BlobMetadataField, BlobNotFoundError, BlobStore, BlobPagingError
 from tests import infra
 
 
@@ -52,7 +52,7 @@ class BlobStoreTests:
         last_modified = self.handle.get_last_modified_date(
             self.test_fixtures_bucket,
             "test_good_source_data/0")
-        self.assertTrue(isinstance(last_modified, date))
+        self.assertTrue(isinstance(last_modified, datetime))
 
         with self.assertRaises(BlobNotFoundError):
             self.handle.get_last_modified_date(
@@ -100,16 +100,11 @@ class BlobStoreTests:
         """
         Ensure that the ```list_v2``` method returns sane data.
         """
-        items = list(self.handle.list_v2(
+        keys = list((key for key, item in self.handle.list_v2(
             self.test_fixtures_bucket,
             "test_good_source_data/0",
-        ))
-        self.assertIn("test_good_source_data/0", items)
-        for item in items:
-            if item == "test_good_source_data/0":
-                break
-        else:
-            self.fail("did not find the requisite key")
+        )))
+        self.assertIn("test_good_source_data/0", keys)
 
         # fetch a bunch of items all at once.
         items = list(self.handle.list_v2(
@@ -117,6 +112,10 @@ class BlobStoreTests:
             "testList/prefix",
         ))
         self.assertEqual(len(items), 10)
+        for ix, (key, metadata) in enumerate(items):
+            self.assertTrue(f"prefix.00{ix}" in key)
+            self.assertTrue(all(field in metadata for field in BlobMetadataField))
+            self.assertTrue(all(key in BlobMetadataField for key in metadata))
 
         # fetch a bunch of items all at once with small page size
         items = list(self.handle.list_v2(
@@ -155,11 +154,11 @@ class BlobStoreTests:
         items1 = list()
         items2 = list()
 
-        for i, item in enumerate(blobiter):
+        for ix, (key, item) in enumerate(blobiter):
             items1.append(
-                item
+                key
             )
-            if i >= break_size - 1:
+            if ix >= break_size - 1:
                 break
 
         blobiter = self.handle.list_v2(

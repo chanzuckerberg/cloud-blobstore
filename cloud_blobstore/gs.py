@@ -8,7 +8,7 @@ from google.cloud.storage import Client
 from google.cloud.storage.bucket import Bucket
 from requests.exceptions import ConnectTimeout, ReadTimeout
 
-from . import BlobNotFoundError, BlobStore, PagedIter, BlobStoreTimeoutError
+from . import BlobMetadataField, BlobNotFoundError, BlobStore, BlobStoreTimeoutError, PagedIter
 
 
 def CatchTimeouts(meth):
@@ -29,7 +29,7 @@ class GSPagedIter(PagedIter):
             delimiter: str=None,
             start_after_key: str=None,
             token: str=None,
-            k_page_max: int=None
+            k_page_max: int=None,
     ) -> None:
         self.bucket_obj = bucket_obj
         self.start_after_key = start_after_key
@@ -58,7 +58,11 @@ class GSPagedIter(PagedIter):
         return resp
 
     def get_listing_from_response(self, resp):
-        return (b.name for b in resp)
+        return ((b.name, {
+            BlobMetadataField.CHECKSUM: GSBlobStore.compute_cloud_checksum(b),
+            BlobMetadataField.LAST_MODIFIED: b.updated,
+            BlobMetadataField.SIZE: b.size,
+        }) for b in resp)
 
     def get_next_token_from_response(self, resp):
         return resp.next_page_token
@@ -70,6 +74,10 @@ class GSBlobStore(BlobStore):
 
         self.gcp_client = gcp_client
         self.bucket_map = dict()  # type: typing.MutableMapping[str, Bucket]
+
+    @staticmethod
+    def compute_cloud_checksum(blob_obj):
+        return binascii.hexlify(base64.b64decode(blob_obj.crc32c)).decode("utf-8").lower()
 
     @classmethod
     def from_auth_credentials(cls, json_keyfile_path: str) -> "GSBlobStore":
@@ -119,15 +127,15 @@ class GSBlobStore(BlobStore):
             delimiter: str=None,
             start_after_key: str=None,
             token: str=None,
-            k_page_max: int=None
-    ) -> typing.Iterable[str]:
+            k_page_max: int=None,
+    ) -> typing.Iterable[typing.Tuple[str, dict]]:
         return GSPagedIter(
             self._ensure_bucket_loaded(bucket),
             prefix=prefix,
             delimiter=delimiter,
             start_after_key=start_after_key,
             token=token,
-            k_page_max=k_page_max
+            k_page_max=k_page_max,
         )
 
     @CatchTimeouts
@@ -196,7 +204,7 @@ class GSBlobStore(BlobStore):
         :return: the cloud-provided checksum
         """
         blob_obj = self._get_blob_obj(bucket, key)
-        return binascii.hexlify(base64.b64decode(blob_obj.crc32c)).decode("utf-8").lower()
+        return self.compute_cloud_checksum(blob_obj)
 
     @CatchTimeouts
     def get_content_type(

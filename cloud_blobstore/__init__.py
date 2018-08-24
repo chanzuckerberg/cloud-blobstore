@@ -1,9 +1,24 @@
 from datetime import datetime
+from enum import Enum
 import typing
 import types
 
 
-class PagedIter(typing.Iterable[str]):
+class BlobMetadataField(Enum):
+    """
+    Cloud-agnostic dictionary keys to represent blob metadata.
+
+    CHECKSUM      -  Checksum of the blob.
+                     Values returned are cloud-specific and should not be compared across cloud providers.
+    LAST_MODIFIED -  Last modified date of the blob.
+    SIZE          -  Size of the blob.
+    """
+    CHECKSUM = "checksum"
+    LAST_MODIFIED = "last_modified"
+    SIZE = "size"
+
+
+class PagedIter(typing.Iterable[typing.Tuple[str, dict]]):
     """
     Provide an iterator that will iterate over every object, filtered by prefix and delimiter. Alternately continue
     iteration with token and key (start_after_key).
@@ -15,9 +30,11 @@ class PagedIter(typing.Iterable[str]):
         """
         raise NotImplementedError()
 
-    def get_listing_from_response(self, resp) -> typing.Iterable[str]:
+    def get_listing_from_response(self, resp) -> typing.Iterable[typing.Tuple[str, dict]]:
         """
-        Retrieve blob key listing from blobstore response.
+        Retrieve blob metadata objects from blobstore response.
+        Metadata objects represented as tuples in the form of:
+        (key, {BlobMetadataField: val, ...})
         """
         raise NotImplementedError()
 
@@ -46,11 +63,10 @@ class PagedIter(typing.Iterable[str]):
             if self.start_after_key:
                 while True:
                     try:
-                        key = next(listing)
+                        item = next(listing)
                     except StopIteration:
                         raise BlobPagingError('Marker not found in this page')
-
-                    if key == self.start_after_key:
+                    if item[0] == self.start_after_key:
                         break
 
             while True:
@@ -92,8 +108,8 @@ class BlobStore:
             delimiter: str=None,
             start_after_key: str=None,
             token: str=None,
-            k_page_max: int=None
-    ) -> typing.Iterable[str]:
+            k_page_max: int=None,
+    ) -> typing.Iterable[typing.Tuple[str, dict]]:
         """
         Returns an iterator of all blob entries in a bucket that match a given prefix.  Do not return any keys that
         contain the delimiter past the prefix.
