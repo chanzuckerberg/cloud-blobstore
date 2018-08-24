@@ -1,7 +1,6 @@
 from datetime import datetime
 from enum import Enum
 import typing
-import types
 
 
 class BlobMetadataField(Enum):

@@ -4,7 +4,6 @@
 import io
 import os
 import sys
-import json
 import unittest
 
 import google.auth.transport.requests
