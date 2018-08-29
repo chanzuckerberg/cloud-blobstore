@@ -7,7 +7,7 @@ install_requires = [line.rstrip() for line in open(os.path.join(os.path.dirname(
 
 setup(
     name="cloud-blobstore",
-    version="2.1.5",
+    version="3.0.0",
     url='https://github.com/chanzuckerberg/cloud-blobstore',
     license='Apache Software License',
     author='Human Cell Atlas contributors',
