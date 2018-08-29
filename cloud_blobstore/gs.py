@@ -168,11 +168,11 @@ class GSBlobStore(BlobStore):
         Deletes an object in a bucket.  If the operation definitely did not delete anything, return False.  Any other
         return value is treated as something was possibly deleted.
         """
+        bucket_obj = self._ensure_bucket_loaded(bucket)
         try:
-            blob_obj = self._get_blob_obj(bucket, key)
-        except BlobNotFoundError:
+            bucket_obj.delete_blob(key)
+        except NotFound:
             return False
-        blob_obj.delete()
 
     @CatchTimeouts
     def get(self, bucket: str, key: str) -> bytes:
