@@ -7,6 +7,7 @@ import typing
 from boto3.s3.transfer import TransferConfig
 
 from botocore.vendored.requests.exceptions import ConnectTimeout, ReadTimeout
+from botocore.exceptions import EndpointConnectionError
 
 from . import (
     BlobMetadataField,
@@ -23,7 +24,7 @@ def CatchTimeouts(meth):
     def wrapped(*args, **kwargs):
         try:
             return meth(*args, **kwargs)
-        except (ConnectTimeout, ReadTimeout) as ex:
+        except (ConnectTimeout, ReadTimeout, EndpointConnectionError) as ex:
             raise BlobStoreTimeoutError(ex)
     return wrapped
 
@@ -74,6 +75,7 @@ class S3PagedIter(PagedIter):
 
         return ((b['Key'], {
             BlobMetadataField.CHECKSUM: S3BlobStore.compute_cloud_checksum(b),
+            BlobMetadataField.CREATED: b['LastModified'],
             BlobMetadataField.LAST_MODIFIED: b['LastModified'],
             BlobMetadataField.SIZE: b['Size'],
         }) for b in contents)
@@ -290,6 +292,22 @@ class S3BlobStore(BlobStore):
         return self.compute_cloud_checksum(response)
 
     @CatchTimeouts
+    def get_creation_date(
+            self,
+            bucket: str,
+            key: str,
+    ) -> datetime:
+        """
+        Retrieves the creation date for a given key in a given bucket.
+        :param bucket: the bucket the object resides in.
+        :param key: the key of the object for which the creation date is being retrieved.
+        :return: the creation date
+        """
+        # An S3 object's creation date is stored in its LastModified field which stores the
+        # most recent value between the two.
+        return self.get_last_modified_date(bucket, key)
+
+    @CatchTimeouts
     def get_last_modified_date(
             self,
             bucket: str,
@@ -301,8 +319,8 @@ class S3BlobStore(BlobStore):
         :param key: the key of the object for which the last modified date is being retrieved.
         :return: the last modified date
         """
-        blob_obj = self.get_all_metadata(bucket, key)
-        return blob_obj['LastModified']
+        response = self.get_all_metadata(bucket, key)
+        return response['LastModified']
 
     @CatchTimeouts
     def get_user_metadata(

@@ -13,6 +13,7 @@ class BlobMetadataField(Enum):
     SIZE          -  Size of the blob.
     """
     CHECKSUM = "checksum"
+    CREATED = "created"
     LAST_MODIFIED = "last_modified"
     SIZE = "size"
 
@@ -199,6 +200,19 @@ class BlobStore:
         :param key: the key of the object for which checksum is being retrieved.
         :param cloud_checksum: the expected cloud-provided checksum.
         :return: an opaque copy token
+        """
+        raise NotImplementedError()
+
+    def get_creation_date(
+            self,
+            bucket: str,
+            key: str,
+    ) -> datetime:
+        """
+        Retrieves the creation date for a given key in a given bucket.
+        :param bucket: the bucket the object resides in.
+        :param key: the key of the object for which the creation date is being retrieved.
+        :return: the creation date
         """
         raise NotImplementedError()
 

@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+import datetime
 import io
 import os
 import sys
 import unittest
+import uuid
 
 import google.auth.transport.requests
 import google.cloud.storage
@@ -42,6 +44,22 @@ class TestGSBlobStore(unittest.TestCase, BlobStoreTests):
 
         with self.assertRaises(BlobNotFoundError):
             handle.get_user_metadata(
+                self.test_fixtures_bucket,
+                "test_good_source_data_DOES_NOT_EXIST")
+
+    def test_get_creation_date(self):
+        key = str(uuid.uuid4())
+        bucket = self.handle.gcp_client.get_bucket(self.test_bucket)
+        bucket.blob(key).upload_from_string("")
+
+        creation_date = self.handle.get_creation_date(self.test_bucket, key)
+        self.assertTrue(creation_date > datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(minutes=1))
+        self.assertTrue(isinstance(creation_date, datetime.datetime))
+
+        self.handle.delete(self.test_bucket, key)
+
+        with self.assertRaises(BlobNotFoundError):
+            self.handle.get_creation_date(
                 self.test_fixtures_bucket,
                 "test_good_source_data_DOES_NOT_EXIST")
 

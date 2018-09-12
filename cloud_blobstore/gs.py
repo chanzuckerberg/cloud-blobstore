@@ -60,6 +60,7 @@ class GSPagedIter(PagedIter):
     def get_listing_from_response(self, resp):
         return ((b.name, {
             BlobMetadataField.CHECKSUM: GSBlobStore.compute_cloud_checksum(b),
+            BlobMetadataField.CREATED: b.time_created,
             BlobMetadataField.LAST_MODIFIED: b.updated,
             BlobMetadataField.SIZE: b.size,
         }) for b in resp)
@@ -240,6 +241,21 @@ class GSBlobStore(BlobStore):
         blob_obj = self._get_blob_obj(bucket, key)
         assert binascii.hexlify(base64.b64decode(blob_obj.crc32c)).decode("utf-8").lower() == cloud_checksum
         return blob_obj.generation
+
+    @CatchTimeouts
+    def get_creation_date(
+            self,
+            bucket: str,
+            key: str,
+    ) -> datetime.datetime:
+        """
+        Retrieves the creation date for a given key in a given bucket.
+        :param bucket: the bucket the object resides in.
+        :param key: the key of the object for which the creation date is being retrieved.
+        :return: the creation date
+        """
+        blob_obj = self._get_blob_obj(bucket, key)
+        return blob_obj.time_created
 
     @CatchTimeouts
     def get_last_modified_date(

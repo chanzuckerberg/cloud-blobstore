@@ -11,6 +11,7 @@ import select
 import boto3
 import botocore
 import contextlib
+import datetime
 import socket
 from multiprocessing import Process, Manager
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -50,6 +51,21 @@ class TestS3BlobStore(unittest.TestCase, BlobStoreTests):
 
         with self.assertRaises(BlobNotFoundError):
             handle.get_user_metadata(
+                self.test_fixtures_bucket,
+                "test_good_source_data_DOES_NOT_EXIST")
+
+    def test_get_creation_date(self):
+        key = str(uuid.uuid4())
+        boto3.resource('s3').Object(self.test_bucket, key).put()
+
+        creation_date = self.handle.get_creation_date(self.test_bucket, key)
+        self.assertTrue(creation_date > datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(minutes=1))
+        self.assertTrue(isinstance(creation_date, datetime.datetime))
+
+        self.handle.delete(self.test_bucket, key)
+
+        with self.assertRaises(BlobNotFoundError):
+            self.handle.get_creation_date(
                 self.test_fixtures_bucket,
                 "test_good_source_data_DOES_NOT_EXIST")
 
