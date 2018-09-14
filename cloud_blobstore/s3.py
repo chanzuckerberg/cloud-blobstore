@@ -6,8 +6,8 @@ import typing
 
 from boto3.s3.transfer import TransferConfig
 
-from botocore.vendored.requests.exceptions import ConnectTimeout, ReadTimeout
 from botocore.exceptions import EndpointConnectionError
+from botocore.vendored.requests.exceptions import ConnectTimeout, ReadTimeout
 
 from . import (
     BlobMetadataField,
@@ -24,7 +24,7 @@ def CatchTimeouts(meth):
     def wrapped(*args, **kwargs):
         try:
             return meth(*args, **kwargs)
-        except (ConnectTimeout, ReadTimeout, EndpointConnectionError) as ex:
+        except (ConnectTimeout, EndpointConnectionError, ReadTimeout) as ex:
             raise BlobStoreTimeoutError(ex)
     return wrapped
 
