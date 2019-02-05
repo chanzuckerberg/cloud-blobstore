@@ -384,6 +384,43 @@ class S3BlobStore(BlobStore):
                 raise BlobNotFoundError(f"Could not find s3://{src_bucket}/{src_key}") from ex
             raise BlobStoreUnknownError(ex)
 
+    @CatchTimeouts
+    def copy_object(
+                    self,
+                    src_bucket: str, src_key: str,
+                    dst_bucket: str, dst_key: str,
+                    tagging_directive: str,
+                    tagging: dict,
+                    copy_token: typing.Any = None,
+                    **kwargs
+    ):
+        tagging_format = []
+        for key, val in tagging.items:
+            tagging_format.append("=".join([key, val]))
+        tagging_format = "&".join(tagging_format)
+        tagging_format = "".join(["?", tagging_format])
+        if copy_token is not None:
+            kwargs['CopySourceIfMatch'] = copy_token
+        try:
+            self.s3_client.copy_object(
+                dict(
+                    Bucket=src_bucket,
+                    Key=src_key,
+                ),
+                Bucket=dst_bucket,
+                Key=dst_key,
+                TaggingDirective=tagging_directive,
+                tagging=tagging_format,
+                Config=TransferConfig(
+                    multipart_threshold=(64 * 1024 * 1024) + 1,
+                    multipart_chunksize=64 * 1024 * 1024,
+                ),
+            )
+        except botocore.exceptions.ClientError as ex:
+            if str(ex.response['Error']['Code']) == str(requests.codes.precondition_failed):
+                raise BlobNotFoundError(f"Could not find s3://{src_bucket}/{src_key}") from ex
+            raise BlobStoreUnknownError(ex)
+
     def get_size(
             self,
             bucket: str,
