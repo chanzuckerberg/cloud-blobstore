@@ -21,7 +21,7 @@ from botocore.vendored.requests.exceptions import ReadTimeout
 pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noqa
 sys.path.insert(0, pkg_root)  # noqa
 
-from cloud_blobstore import BlobNotFoundError, BlobStoreTimeoutError
+from cloud_blobstore import BlobStore, BlobNotFoundError, BlobStoreTimeoutError
 from cloud_blobstore.s3 import S3BlobStore
 from tests import infra
 from tests.blobstore_common_tests import BlobStoreTests
