@@ -16,10 +16,10 @@ after_success:
 - bash <(curl -s https://codecov.io/bash)
 env:
   global:
-  - S3_BUCKET=cloud-blobstore-travis-test
-  - S3_BUCKET_US_EAST_1=cloud-blobstore-travis-test
-  - S3_BUCKET_NON_US_EAST_1=cloud-blobstore-travis-test-us-west-1
-  - S3_BUCKET_FIXTURES=cloud-blobstore-travis-test-fixtures
-  - GS_BUCKET=czi-cloud-blobstore
-  - GS_BUCKET_FIXTURES=czi-cloud-blobstore-fixtures
+  - S3_BUCKET=hca-cloud-blobstore-travis-test
+  - S3_BUCKET_US_EAST_1=hca-cloud-blobstore-travis-test
+  - S3_BUCKET_NON_US_EAST_1=hca-cloud-blobstore-travis-test-us-west-1
+  - S3_BUCKET_FIXTURES=hca-cloud-blobstore-travis-test-fixtures
+  - GS_BUCKET=hca-cloud-blobstore-travis-test
+  - GS_BUCKET_FIXTURES=hca-cloud-blobstore-travis-test-fixtures
   - GOOGLE_APPLICATION_CREDENTIALS=gcp-credentials.json
