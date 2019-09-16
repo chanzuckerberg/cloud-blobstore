@@ -2,6 +2,7 @@ import base64
 import binascii
 import datetime
 import typing
+import copy
 
 from google.cloud.exceptions import NotFound
 from google.cloud.storage import Client
@@ -146,7 +147,10 @@ class GSBlobStore(BlobStore):
             key: str,
             **kwargs) -> str:
         blob_obj = self._get_blob_obj(bucket, key)
-        return blob_obj.generate_signed_url(datetime.timedelta(days=1))
+        if 'ResponseContentDisposition' in kwargs:
+            kwargs['response_disposition'] = copy.deepcopy(kwargs['ResponseContentDisposition'])
+            del kwargs['ResponseContentDisposition']
+        return blob_obj.generate_signed_url(datetime.timedelta(days=1), **kwargs)
 
     @CatchTimeouts
     def upload_file_handle(

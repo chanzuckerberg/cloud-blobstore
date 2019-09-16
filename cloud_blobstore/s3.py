@@ -3,6 +3,7 @@ import botocore
 from datetime import datetime
 import requests
 import typing
+import copy
 
 from boto3.s3.transfer import TransferConfig
 
@@ -156,10 +157,14 @@ class S3BlobStore(BlobStore):
             bucket: str,
             key: str,
             **kwargs) -> str:
+        if 'response_disposition' in kwargs:
+            kwargs['ResponseContentDisposition'] = copy.deepcopy(kwargs['response_disposition'])
+            del kwargs['response_disposition']
         return self._generate_presigned_url(
             bucket,
             key,
-            "get_object"
+            "get_object",
+            **kwargs
         )
 
     def _generate_presigned_url(
