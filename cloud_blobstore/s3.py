@@ -157,9 +157,12 @@ class S3BlobStore(BlobStore):
             bucket: str,
             key: str,
             **kwargs) -> str:
+
+        # if the google response_disposition keyword was used, sub in the aws keyword
         if 'response_disposition' in kwargs:
             kwargs['ResponseContentDisposition'] = copy.deepcopy(kwargs['response_disposition'])
             del kwargs['response_disposition']
+
         return self._generate_presigned_url(
             bucket,
             key,

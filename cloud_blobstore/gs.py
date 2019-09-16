@@ -147,9 +147,12 @@ class GSBlobStore(BlobStore):
             key: str,
             **kwargs) -> str:
         blob_obj = self._get_blob_obj(bucket, key)
+
+        # if the aws ResponseContentDisposition keyword was used, sub in the google keyword
         if 'ResponseContentDisposition' in kwargs:
             kwargs['response_disposition'] = copy.deepcopy(kwargs['ResponseContentDisposition'])
             del kwargs['ResponseContentDisposition']
+
         return blob_obj.generate_signed_url(datetime.timedelta(days=1), **kwargs)
 
     @CatchTimeouts
