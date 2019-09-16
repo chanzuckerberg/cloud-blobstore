@@ -248,10 +248,7 @@ class BlobStoreTests:
                 "test_good_source_data/0",
                 response_disposition='attachment; filename=test-data.json')
             resp = requests.get(presigned_url)
-            print(resp)
-            print(resp.headers)
-            assert 'response-content-disposition' in resp.headers
-            # assert resp.headers['response-content-disposition'] == 'attachment; filename=test-data.json', resp.headers
+            assert resp.headers['Content-Disposition'] == 'attachment; filename=test-data.json', resp.headers
 
         with self.subTest('Test AWS Content-Disposition kwarg for presigned urls.'):
             presigned_url = self.handle.generate_presigned_GET_url(
@@ -259,10 +256,7 @@ class BlobStoreTests:
                 "test_good_source_data/0",
                 ResponseContentDisposition='attachment; filename=test-data.json')
             resp = requests.get(presigned_url)
-            print(resp)
-            print(resp.headers)
-            assert 'response-content-disposition' in resp.headers
-            # assert resp.headers['response-content-disposition'] == 'attachment; filename=test-data.json', resp.headers
+            assert resp.headers['Content-Disposition'] == 'attachment; filename=test-data.json', resp.headers
 
     def testCopy(self):
         dst_blob_name = infra.generate_test_key()
