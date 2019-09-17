@@ -246,7 +246,7 @@ class BlobStoreTests:
             presigned_url = self.handle.generate_presigned_GET_url(
                 self.test_fixtures_bucket,
                 "test_good_source_data/0",
-                response_disposition='attachment; filename=test-data.json')
+                response_content_disposition='attachment; filename=test-data.json')
             resp = requests.get(presigned_url)
             assert resp.headers['Content-Disposition'] == 'attachment; filename=test-data.json', resp.headers
 
@@ -254,7 +254,7 @@ class BlobStoreTests:
             presigned_url = self.handle.generate_presigned_GET_url(
                 self.test_fixtures_bucket,
                 "test_good_source_data/0",
-                ResponseContentDisposition='attachment; filename=test-data.json')
+                response_content_disposition='attachment; filename=test-data.json')
             resp = requests.get(presigned_url)
             assert resp.headers['Content-Disposition'] == 'attachment; filename=test-data.json', resp.headers
 
