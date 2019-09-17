@@ -2,7 +2,6 @@ import base64
 import binascii
 import datetime
 import typing
-import copy
 
 from google.cloud.exceptions import NotFound
 from google.cloud.storage import Client

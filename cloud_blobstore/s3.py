@@ -3,7 +3,6 @@ import botocore
 from datetime import datetime
 import requests
 import typing
-import copy
 
 from boto3.s3.transfer import TransferConfig
 
