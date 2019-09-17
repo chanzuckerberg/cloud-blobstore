@@ -29,7 +29,8 @@ expected to abide by the following guidelines:
 1. All code must be reviewed by at least 1 other team member.
 
 1. All pull requests relating to an issue must include the text
-   "fixes \#123" or "closes \#123", where \#123 is the issue number.
+   "connected to \#123", where \#123 is the issue number. (Using
+   the keywords "closes \#123" or "fixes \#123" will automatically
+   close issue \#123 when the pull request is merged.)
 
 1. Individual commit messages should clearly express the commit's purpose.
-
