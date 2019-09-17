@@ -145,13 +145,12 @@ class GSBlobStore(BlobStore):
             self,
             bucket: str,
             key: str,
+            response_content_disposition: str = None,
             **kwargs) -> str:
         blob_obj = self._get_blob_obj(bucket, key)
 
-        # if the aws ResponseContentDisposition keyword was used, sub in the google keyword
-        if 'ResponseContentDisposition' in kwargs:
-            kwargs['response_disposition'] = copy.deepcopy(kwargs['ResponseContentDisposition'])
-            del kwargs['ResponseContentDisposition']
+        if response_content_disposition:
+            kwargs['response_disposition'] = response_content_disposition
 
         return blob_obj.generate_signed_url(datetime.timedelta(days=1), **kwargs)
 
