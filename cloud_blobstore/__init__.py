@@ -52,14 +52,10 @@ class PagedIter(typing.Iterable[typing.Tuple[str, dict]]):
         If start_after_key is not None, iteration will begin on the next key if start_after_key is found on the
         first page of results. If it is not found on the first page of results, BlobPagingError will be raised.
         """
-        next_token = self.token
-
         while True:
-            self.token = next_token
-
-            resp = self.get_api_response(next_token)
+            resp = self.get_api_response(self.token)
             listing = self.get_listing_from_response(resp)
-
+            self.token = self.get_next_token_from_response(resp)
             if self.start_after_key:
                 while True:
                     try:
@@ -79,9 +75,9 @@ class PagedIter(typing.Iterable[typing.Tuple[str, dict]]):
 
             self.start_after_key = None
 
-            next_token = self.get_next_token_from_response(resp)
+            self.token = self.get_next_token_from_response(resp)
 
-            if not next_token:
+            if not self.token:
                 break
 
 
