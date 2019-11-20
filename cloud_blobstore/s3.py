@@ -3,6 +3,7 @@ import botocore
 from datetime import datetime
 import requests
 import typing
+from concurrent.futures import ThreadPoolExecutor
 
 from boto3.s3.transfer import TransferConfig
 
@@ -409,6 +410,55 @@ class S3BlobStore(BlobStore):
             if str(ex.response['Error']['Code']) == str(requests.codes.not_found):
                 raise BlobNotFoundError(f"Could not find s3://{bucket}/{key}") from ex
             raise BlobStoreUnknownError(ex)
+
+    def multipart_parallel_upload(
+            self,
+            bucket: str,
+            key: str,
+            src_file_handle: typing.BinaryIO,
+            size: int,
+            part_size: int,
+            content_type: str=None,
+            metadata: dict=None,
+            parallelization_factor=8) -> typing.Sequence[dict]:
+        """
+        Upload a file object in parallel.
+        :param bucket:
+        """
+        kwargs: dict = dict()
+        if content_type is not None:
+            kwargs['ContentType'] = content_type
+        if metadata is not None:
+            kwargs['Metadata'] = metadata
+        mpu = self.s3_client.create_multipart_upload(Bucket=bucket, Key=key, **kwargs)
+
+        part_count = size // part_size
+        if part_count * part_size < size:
+            part_count += 1
+
+        def _copy_part(part_number):
+            return self.s3_client.upload_part(
+                Body=src_file_handle.read(part_size),
+                Bucket=bucket,
+                Key=key,
+                PartNumber=part_number,
+                UploadId=mpu['UploadId'],
+            )
+
+        with ThreadPoolExecutor(max_workers=parallelization_factor) as e:
+            futures = {e.submit(_copy_part, part_number): part_number
+                       for part_number in range(1, 1 + part_count)}
+            parts = sorted(
+                [dict(ETag=future.result()['ETag'], PartNumber=futures[future]) for future in futures],
+                key=lambda p: p['PartNumber']
+            )
+        self.s3_client.complete_multipart_upload(
+            Bucket=bucket,
+            Key=key,
+            MultipartUpload=dict(Parts=parts),
+            UploadId=mpu['UploadId'],
+        )
+        return parts
 
     def find_next_missing_parts(
             self,

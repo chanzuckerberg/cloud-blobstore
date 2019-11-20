@@ -228,6 +228,43 @@ class TestS3BlobStore(unittest.TestCase, BlobStoreTests):
                 io.BytesIO(os.urandom(1000))
             )
 
+    def test_multipart_parallel_upload(self):
+        size = 7 * 1024 * 1024
+        data = os.urandom(size)
+        metadata = {'something': "foolish"}
+        part_size = 5 * 1024 * 1024
+        with self.subTest("copy multiple parts"):
+            with io.BytesIO(data) as fh:
+                self.handle.multipart_parallel_upload(
+                    self.test_bucket,
+                    "fake_key",
+                    fh,
+                    size,
+                    part_size,
+                    metadata=metadata,
+                    content_type="application/octet-stream",
+                )
+        part_size = 14 * 1024 * 1024
+        with self.subTest("should work with single part"):
+            with io.BytesIO(data) as fh:
+                self.handle.multipart_parallel_upload(
+                    self.test_bucket,
+                    "fake_key",
+                    fh,
+                    size,
+                    part_size,
+                )
+        part_size = 5 * 1024 * 1024
+        with self.subTest("should work parallelization factor of 1"):
+            with io.BytesIO(data) as fh:
+                self.handle.multipart_parallel_upload(
+                    self.test_bucket,
+                    "fake_key",
+                    fh,
+                    size,
+                    part_size,
+                    parallelization_factor=1,
+                )
 
 def unused_tcp_port():
     with contextlib.closing(socket.socket()) as sock:
