@@ -315,8 +315,10 @@ class GSBlobStore(BlobStore):
             src_bucket: str, src_key: str,
             dst_bucket: str, dst_key: str,
             copy_token: typing.Any=None,
+            content_type: str=None,
             **kwargs
     ):
+        # Test if content-type actually carries over
         src_bucket_obj = self._ensure_bucket_loaded(src_bucket)
         src_blob_obj = src_bucket_obj.get_blob(src_key)
         dst_bucket_obj = self._ensure_bucket_loaded(dst_bucket)

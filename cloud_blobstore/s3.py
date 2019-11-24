@@ -367,10 +367,14 @@ class S3BlobStore(BlobStore):
             src_bucket: str, src_key: str,
             dst_bucket: str, dst_key: str,
             copy_token: typing.Any=None,
+            content_type: str=None,
             **kwargs
     ):
         if copy_token is not None:
             kwargs['CopySourceIfMatch'] = copy_token
+        if content_type is not None:
+            kwargs['ContentType'] = content_type
+
         try:
             self.s3_client.copy(
                 dict(
