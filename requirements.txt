@@ -1,3 +1,4 @@
 boto3
 google-cloud-storage >= 1.7.0
 requests
+rsa>=4.7 # not directly required, pinned by Snyk to avoid a vulnerability
